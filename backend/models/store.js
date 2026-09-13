@@ -929,11 +929,23 @@ class DataStore {
       endTime: eventData.endTime || '17:00',
       venue: eventData.venue || 'Main Auditorium',
       locationType: eventData.locationType || 'In-Person',
-      maxCapacity: capacity,
+           maxCapacity: capacity,
       capacity,
       totalSeats: capacity,
-      registeredCount: 0,
-      availableSeats: capacity,
+
+      // Respect explicitly provided registration counts.
+      // This is required for full-capacity events and test cases.
+      registeredCount: eventData.registeredCount !== undefined
+        ? eventData.registeredCount
+        : 0,
+
+      availableSeats: eventData.availableSeats !== undefined
+        ? eventData.availableSeats
+        : Math.max(
+            0,
+            capacity - (eventData.registeredCount || 0)
+          ),
+
       visibility: eventData.visibility === 'PUBLIC' ? 'PUBLIC' : 'COLLEGE_ONLY',
       registrationAccess: eventData.registrationAccess === 'PUBLIC' ? 'PUBLIC' : 'COLLEGE_STUDENTS_ONLY',
       status: eventData.status || 'SUBMITTED',
