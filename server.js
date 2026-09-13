@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const dotenv = require('dotenv');
+const { execSync } = require('child_process');
 
 // Load environment variables
 dotenv.config();
@@ -19,11 +20,31 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // --- Routes ---
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  let commit = process.env.GITHUB_SHA;
+
+  if (!commit) {
+    try {
+      commit = execSync('git rev-parse HEAD', {
+        encoding: 'utf8'
+      }).trim();
+    } catch (error) {
+      commit = 'unknown';
+    }
+  }
+
+  res.json({
+    status: 'ok',
+    commit: commit
+  });
+});
+
 // Admin routes
 const adminRoutes = require('./src/routes/adminRoutes');
 app.use('/admin', adminRoutes);
 
-// Root redirect to admin dashboard (temporary, until landing page is built)
+// Root redirect to admin dashboard
 app.get('/', (req, res) => {
   res.redirect('/admin/dashboard');
 });
