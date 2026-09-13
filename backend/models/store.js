@@ -763,6 +763,150 @@ class DataStore {
     return newUser;
   }
 
+    // --- ORGANIZER HELPERS ---
+  getDashboardStats(organizerId) {
+    const organizerEvents = this.events.filter(
+      e => e.organizerId === organizerId
+    );
+
+    const eventIds = new Set(organizerEvents.map(e => e._id));
+
+    const organizerRegistrations = this.registrations.filter(
+      r => eventIds.has(r.eventId)
+    );
+
+    const totalEvents = organizerEvents.length;
+    const totalRegistrations = organizerRegistrations.length;
+    const upcomingEvents = organizerEvents.filter(
+      e => new Date(e.date) >= new Date()
+    ).length;
+
+    return {
+      totalEvents,
+      totalRegistrations,
+      upcomingEvents,
+      totalAttendees: totalRegistrations,
+      publishedEvents: organizerEvents.filter(
+        e => e.status === 'Published'
+      ).length,
+      pendingEvents: organizerEvents.filter(
+        e => e.status === 'SUBMITTED' || e.status === 'Pending'
+      ).length
+    };
+  }
+
+  getEventsByOrganizer(organizerId, options = {}) {
+    let events = this.events.filter(
+      e => e.organizerId === organizerId
+    );
+
+    const { search, status, category, page = 1, limit = 10 } = options;
+
+    if (search) {
+      const keyword = search.toLowerCase();
+      events = events.filter(e =>
+        (e.title || '').toLowerCase().includes(keyword) ||
+        (e.description || '').toLowerCase().includes(keyword)
+      );
+    }
+
+    if (status) {
+      events = events.filter(e => e.status === status);
+    }
+
+    if (category) {
+      events = events.filter(e => e.category === category);
+    }
+
+    const total = events.length;
+    const start = (Number(page) - 1) * Number(limit);
+    const paginatedEvents = events.slice(
+      start,
+      start + Number(limit)
+    );
+
+    return {
+      events: paginatedEvents,
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      totalPages: Math.ceil(total / Number(limit))
+    };
+  }
+
+  getEventById(id) {
+    return this.events.find(
+      e => e._id === id || e.id === id
+    );
+  }
+
+  getRegistrationsForEvent(eventId, options = {}) {
+    let registrations = this.registrations.filter(
+      r => r.eventId === eventId
+    );
+
+    const { search, status } = options;
+
+    if (search) {
+      const keyword = search.toLowerCase();
+
+      registrations = registrations.filter(r =>
+        (r.participantName || '').toLowerCase().includes(keyword) ||
+        (r.participantEmail || '').toLowerCase().includes(keyword)
+      );
+    }
+
+    if (status) {
+      registrations = registrations.filter(
+        r => r.status === status
+      );
+    }
+
+    return registrations;
+  }
+
+  updateRegistrationStatus(regId, status) {
+    const registration = this.registrations.find(
+      r => r._id === regId || r.id === regId
+    );
+
+    if (!registration) return null;
+
+    registration.status = status;
+    registration.attended = status === 'Attended';
+
+    return registration;
+  }
+
+  updateUser(userId, updates) {
+    const user = this.findUserById(userId);
+
+    if (!user) return null;
+
+    Object.assign(user, updates);
+    user.updatedAt = new Date().toISOString();
+
+    return user;
+  }
+
+  updateEventStatus(id, organizerId, status) {
+    const event = this.findEventById(id);
+
+    if (!event) return null;
+
+    if (
+      organizerId &&
+      event.organizerId !== organizerId
+    ) {
+      return null;
+    }
+
+    event.status = status;
+    event.updatedAt = new Date().toISOString();
+
+    return event;
+  }
+
   // --- EVENT HELPERS ---
   findEventById(id) {
     return this.events.find(e => e._id === id || e.id === id);
@@ -837,40 +981,81 @@ class DataStore {
     return newEvent;
   }
 
-  updateEvent(id, updateData) {
-    const idx = this.events.findIndex(e => e._id === id || e.id === id);
-    if (idx === -1) return null;
+  updateEvent(id, organizerId, updateData) {
+  const idx = this.events.findIndex(
+    e => e._id === id || e.id === id
+  );
 
-    const existing = this.events[idx];
-    const updatedHistory = updateData.approvalHistory
-      ? updateData.approvalHistory
-      : (existing.approvalHistory || []);
+  if (idx === -1) return null;
 
-    if (updateData.historyEntry) {
-      updatedHistory.push({
-        actor: updateData.historyEntry.actor || 'System',
-        role: updateData.historyEntry.role || 'System',
-        action: updateData.historyEntry.action || 'UPDATED',
-        timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
-        comment: updateData.historyEntry.comment || ''
-      });
-    }
+  const existing = this.events[idx];
 
-    this.events[idx] = {
-      ...existing,
-      ...updateData,
-      approvalHistory: updatedHistory,
-      updatedAt: new Date().toISOString()
-    };
-    return this.events[idx];
+  // Support both:
+  // updateEvent(id, updateData)
+  // updateEvent(id, organizerId, updateData)
+  if (typeof organizerId === 'object' && updateData === undefined) {
+    updateData = organizerId;
+    organizerId = null;
   }
 
-  deleteEvent(id) {
-    const idx = this.events.findIndex(e => e._id === id || e.id === id);
-    if (idx === -1) return null;
-    return this.events.splice(idx, 1)[0];
+  // Check ownership when organizerId is provided
+  if (
+    organizerId &&
+    existing.organizerId !== organizerId
+  ) {
+    return null;
   }
 
+  const updatedHistory = updateData.approvalHistory
+    ? updateData.approvalHistory
+    : (existing.approvalHistory || []);
+
+  if (updateData.historyEntry) {
+    updatedHistory.push({
+      actor: updateData.historyEntry.actor || 'System',
+      role: updateData.historyEntry.role || 'System',
+      action: updateData.historyEntry.action || 'UPDATED',
+      timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      comment: updateData.historyEntry.comment || ''
+    });
+  }
+
+  this.events[idx] = {
+    ...existing,
+    ...updateData,
+    approvalHistory: updatedHistory,
+    updatedAt: new Date().toISOString()
+  };
+
+  return this.events[idx];
+}
+
+  deleteEvent(id, organizerId) {
+  const idx = this.events.findIndex(
+    e => e._id === id || e.id === id
+  );
+
+  if (idx === -1) return false;
+
+  const event = this.events[idx];
+
+  // Check ownership when organizerId is provided
+  if (
+    organizerId &&
+    event.organizerId !== organizerId
+  ) {
+    return false;
+  }
+
+  this.events.splice(idx, 1);
+
+  // Remove registrations belonging to the deleted event
+  this.registrations = this.registrations.filter(
+    r => r.eventId !== id
+  );
+
+  return true;
+}
   // --- REGISTRATION HELPERS ---
   createRegistration(regData) {
     const regId = regData._id || `reg_${Date.now()}`;
