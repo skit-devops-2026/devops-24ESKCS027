@@ -1,13 +1,13 @@
 const express = require('express');
 const path = require('path');
 const dotenv = require('dotenv');
-const { execSync } = require('child_process');
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const COMMIT_SHA = process.env.GITHUB_SHA || 'unknown';
 
 // --- View Engine Setup ---
 app.set('view engine', 'ejs');
@@ -22,17 +22,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  let commit = process.env.GITHUB_SHA;
-
-  if (!commit) {
-    try {
-      commit = execSync('git rev-parse HEAD', {
-        encoding: 'utf8'
-      }).trim();
-    } catch (error) {
-      commit = 'unknown';
-    }
-  }
+  const commit = COMMIT_SHA;
 
   res.json({
     status: 'ok',
@@ -65,3 +55,5 @@ app.listen(PORT, () => {
   console.log(`EventHive server running on http://localhost:${PORT}`);
   console.log(`Admin dashboard: http://localhost:${PORT}/admin/dashboard`);
 });
+
+module.exports = app;
