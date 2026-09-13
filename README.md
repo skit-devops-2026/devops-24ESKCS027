@@ -21,3 +21,15 @@ EventHive is a college event management platform that helps students discover an
 ```bash
 make install
 make run
+
+## DevOps Workflow
+
+EventHive uses GitHub Actions for automated build and test validation.
+
+The CI workflow runs on pushes and pull requests and performs:
+- Repository hygiene checks
+- Dependency installation
+- Automated tests
+- Project build validation
+
+Docker image builds are also automated through the CI workflow.
