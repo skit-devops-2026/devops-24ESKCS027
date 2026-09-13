@@ -4,7 +4,7 @@ install:
 	npm ci
 
 test:
-	npm test --if-present
+	npm test
 
 build:
 	npm run build --if-present
