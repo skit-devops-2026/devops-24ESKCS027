@@ -57,7 +57,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository }}:latest
+          tags: ghcr.io/skit-devops-2026/devops-24eskcs027:latest
           build-args: |
             GITHUB_SHA=${{ github.sha }}
 
