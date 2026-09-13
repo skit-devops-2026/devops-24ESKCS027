@@ -1,23 +1,44 @@
 const express = require('express');
-const router = express.Router();
+
 const {
   login,
   demoLogin,
   registerUser,
+  registerOrganizer,
   getMe,
   getHostsList
 } = require('../controllers/authController');
+
 const { protect } = require('../middleware/authMiddleware');
 
-// Public auth routes
-router.post('/login', login);
-router.post('/register', registerUser);
-router.post('/register-organizer', registerUser);
-router.post('/demo-login', demoLogin);
-router.post('/demo-organizer', demoLogin);
-router.get('/hosts', getHostsList);
+const router = express.Router();
 
-// Protected routes
+// Login
+router.post('/login', login);
+
+// Demo login
+router.post('/demo-login', demoLogin);
+
+// Demo organizer login
+router.post('/demo-organizer', (req, res) => {
+  req.body = {
+    ...(req.body || {}),
+    role: 'organizer'
+  };
+
+  return demoLogin(req, res);
+});
+
+// General registration
+router.post('/register', registerUser);
+
+// Organizer registration
+router.post('/register-organizer', registerOrganizer);
+
+// Current user
 router.get('/me', protect, getMe);
+
+// Hosts list
+router.get('/hosts', getHostsList);
 
 module.exports = router;

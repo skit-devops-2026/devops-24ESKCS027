@@ -16,9 +16,14 @@
   "author": "EventHive Team",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
     "dotenv": "^16.4.5",
     "ejs": "^3.1.10",
-    "express": "^4.21.0"
+    "express": "^4.21.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.10.0",
+    "uuid": "^14.0.2"
   },
   "devDependencies": {
     "nodemon": "^3.1.4"

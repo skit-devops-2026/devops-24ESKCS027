@@ -35,6 +35,7 @@ const login = async (req, res) => {
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
+
     if (!isMatch) {
       return res.status(401).json({
         success: false,
@@ -69,15 +70,18 @@ const login = async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Server error during login. Please try again.',
-      error: process.env.NODE_ENV === 'production' ? undefined : error.message,
+      error: process.env.NODE_ENV === 'production'
+        ? undefined
+        : error.message,
     });
   }
 };
 
-// @desc    Quick Demo Login for Testing (supports: admin, host, coordinator, student, public)
+// @desc    Quick Demo Login for Testing
 // @route   POST /api/auth/demo-login
 // @access  Public
 const demoLogin = async (req, res) => {
@@ -89,11 +93,18 @@ const demoLogin = async (req, res) => {
       targetUser = store.findUserByEmail(email.trim().toLowerCase());
     } else if (role) {
       const normalizedRole = role.toLowerCase();
+
       if (normalizedRole === 'admin' || normalizedRole === 'hod') {
         targetUser = store.users.find(u => u.role === 'admin');
-      } else if (normalizedRole === 'host' || normalizedRole === 'teacher') {
+      } else if (
+        normalizedRole === 'host' ||
+        normalizedRole === 'teacher'
+      ) {
         targetUser = store.users.find(u => u.role === 'host');
-      } else if (normalizedRole === 'coordinator' || normalizedRole === 'organizer') {
+      } else if (
+        normalizedRole === 'coordinator' ||
+        normalizedRole === 'organizer'
+      ) {
         targetUser = store.users.find(u => u.role === 'organizer');
       } else if (normalizedRole === 'student') {
         targetUser = store.users.find(u => u.role === 'student');
@@ -103,7 +114,7 @@ const demoLogin = async (req, res) => {
     }
 
     if (!targetUser) {
-      targetUser = store.users[0]; // fallback to admin
+      targetUser = store.users[0];
     }
 
     const token = generateToken(targetUser._id);
@@ -133,10 +144,13 @@ const demoLogin = async (req, res) => {
     });
   } catch (error) {
     console.error('Demo login error:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Error during demo login',
-      error: process.env.NODE_ENV === 'production' ? undefined : error.message,
+      error: process.env.NODE_ENV === 'production'
+        ? undefined
+        : error.message,
     });
   }
 };
@@ -146,57 +160,119 @@ const demoLogin = async (req, res) => {
 // @access  Public
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password, role, department, rollNumber, semester, year, organization, phone } = req.body || {};
+    const {
+      name,
+      email,
+      password,
+      role,
+      department,
+      rollNumber,
+      semester,
+      year,
+      organization,
+      phone
+    } = req.body || {};
 
     if (!name || !name.trim()) {
-      return res.status(400).json({ success: false, message: 'Name is required.' });
+      return res.status(400).json({
+        success: false,
+        message: 'name is required'
+      });
     }
+
     if (!email || !email.trim()) {
-      return res.status(400).json({ success: false, message: 'Email address is required.' });
+      return res.status(400).json({
+        success: false,
+        message: 'Email address is required.'
+      });
     }
+
     if (!password || !password.trim()) {
-      return res.status(400).json({ success: false, message: 'Password is required.' });
+      return res.status(400).json({
+        success: false,
+        message: 'Password is required.'
+      });
     }
 
     const cleanEmail = email.trim().toLowerCase();
+
     if (!EMAIL_REGEX.test(cleanEmail)) {
-      return res.status(400).json({ success: false, message: 'Please enter a valid email address.' });
+      return res.status(400).json({
+        success: false,
+        message: 'Please enter a valid email address.'
+      });
     }
 
     if (password.length < 6) {
-      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters.' });
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 6 characters.'
+      });
     }
 
     const existing = store.findUserByEmail(cleanEmail);
+
     if (existing) {
-      return res.status(400).json({ success: false, message: 'An account with this email already exists.' });
+      return res.status(400).json({
+        success: false,
+        message: 'An account with this email already exists.'
+      });
     }
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Auto-verify if email belongs to college domain or has roll number
-    const isCollegeVerified = cleanEmail.endsWith(`@${COLLEGE_EMAIL_DOMAIN}`) ||
-                             cleanEmail.endsWith('@eventhive.edu') ||
-                             Boolean(rollNumber && rollNumber.trim());
+    const isCollegeVerified =
+      cleanEmail.endsWith(`@${COLLEGE_EMAIL_DOMAIN}`) ||
+      cleanEmail.endsWith('@eventhive.edu') ||
+      Boolean(rollNumber && rollNumber.trim());
 
-    const assignedRole = (role && ['student', 'organizer', 'coordinator', 'host', 'public'].includes(role.toLowerCase()))
-      ? role.toLowerCase()
-      : (isCollegeVerified ? 'student' : 'public');
+    const normalizedRole = role
+      ? role.toLowerCase().trim()
+      : '';
+
+    const assignedRole =
+      normalizedRole === 'publorganiczer'
+        ? 'organizer'
+        : (
+            [
+              'student',
+              'organizer',
+              'coordinator',
+              'host',
+              'public'
+            ].includes(normalizedRole)
+              ? normalizedRole
+              : (isCollegeVerified ? 'student' : 'public')
+          );
 
     const newUser = store.createUser({
       name: name.trim(),
       email: cleanEmail,
       password: hashedPassword,
-      role: assignedRole === 'coordinator' ? 'organizer' : assignedRole,
+      role: assignedRole === 'coordinator'
+        ? 'organizer'
+        : assignedRole,
       department: department || 'Computer Science & Engineering',
-      rollNumber: rollNumber ? rollNumber.trim() : '',
+      rollNumber: rollNumber
+        ? rollNumber.trim()
+        : '',
       semester: semester || '1st Semester',
       year: year || '1st Year',
-      organization: organization ? organization.trim() : '',
-      phone: phone ? phone.trim() : '',
+      organization: organization
+        ? organization.trim()
+        : '',
+      phone: phone
+        ? phone.trim()
+        : '',
       isCollegeVerified,
-      collegeId: rollNumber ? rollNumber.trim() : (isCollegeVerified ? `COL-${Math.floor(Math.random()*10000)}` : '')
+      collegeId: rollNumber
+        ? rollNumber.trim()
+        : (
+            isCollegeVerified
+              ? `COL-${Math.floor(Math.random() * 10000)}`
+              : ''
+          )
     });
 
     const token = generateToken(newUser._id);
@@ -219,12 +295,27 @@ const registerUser = async (req, res) => {
     });
   } catch (error) {
     console.error('Registration error:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Server error during registration.',
-      error: process.env.NODE_ENV === 'production' ? undefined : error.message,
+      error: process.env.NODE_ENV === 'production'
+        ? undefined
+        : error.message,
     });
   }
+};
+
+// @desc    Register specifically as Organizer
+// @route   POST /api/auth/register-organizer
+// @access  Public
+const registerOrganizer = (req, res) => {
+  req.body = {
+    ...(req.body || {}),
+    role: 'organizer'
+  };
+
+  return registerUser(req, res);
 };
 
 // @desc    Get Current Authenticated User Profile
@@ -233,12 +324,19 @@ const registerUser = async (req, res) => {
 const getMe = async (req, res) => {
   try {
     if (!req.user || !req.user._id) {
-      return res.status(401).json({ success: false, message: 'Not authorized. Invalid session.' });
+      return res.status(401).json({
+        success: false,
+        message: 'Not authorized. Invalid session.'
+      });
     }
 
     const user = store.findUserById(req.user._id);
+
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User profile not found.' });
+      return res.status(404).json({
+        success: false,
+        message: 'User profile not found.'
+      });
     }
 
     return res.status(200).json({
@@ -264,7 +362,11 @@ const getMe = async (req, res) => {
     });
   } catch (error) {
     console.error('getMe error:', error);
-    return res.status(500).json({ success: false, message: 'Error fetching user profile' });
+
+    return res.status(500).json({
+      success: false,
+      message: 'Error fetching user profile'
+    });
   }
 };
 
@@ -283,7 +385,7 @@ module.exports = {
   login,
   demoLogin,
   registerUser,
-  registerOrganizer: registerUser,
+  registerOrganizer,
   getMe,
   getHostsList
 };
