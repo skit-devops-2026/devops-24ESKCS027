@@ -155,8 +155,9 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start Server
-if (process.env.NODE_ENV !== 'test') {
+// Start Server only when this file is executed directly.
+// Tests import the Express app and start their own test server.
+if (require.main === module) {
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`================================================================`);
     console.log(`🐝 EventHive One-College Event Management Platform Running on Port ${PORT}`);
