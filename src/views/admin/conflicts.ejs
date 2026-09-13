@@ -1,0 +1,64 @@
+<!-- Schedule Conflict Alerts Page -->
+<div class="page-container">
+
+  <div class="toolbar-card" style="display: flex; justify-content: space-between; align-items: center;">
+    <div>
+      <h2 style="font-size: 16px; font-weight: 700; color: #0f172a;">Campus Venue & Schedule Conflict Alerts</h2>
+      <p style="font-size: 13px; color: var(--color-text-light); margin-top: 2px;">Automated collision detection for overlapping dates, times, and venues.</p>
+    </div>
+    <a href="/admin/venues" class="btn btn--outline btn--sm">View Venue Matrix →</a>
+  </div>
+
+  <section class="dashboard-section">
+    <% if (!conflicts || conflicts.length === 0) { %>
+      <div class="empty-state">
+        <span class="empty-icon">✅</span>
+        <h3>No schedule conflicts detected</h3>
+        <p>All active campus events and pending requests have clear venue and time slots.</p>
+      </div>
+    <% } else { %>
+      <div class="approval-list">
+        <% conflicts.forEach(function(item) { %>
+          <div class="approval-card" style="border: 1px solid #f87171; background-color: #fff1f2; margin-bottom: 16px; padding: 20px; border-radius: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <span class="badge" style="background-color: #fee2e2; color: #b91c1c; font-weight: 700;">
+                ⚠️ SCHEDULE COLLISION
+              </span>
+              <span style="font-size: 12px; color: var(--color-text-light);">Venue: <strong><%= item.event.venue %></strong></span>
+            </div>
+
+            <h3 style="font-size: 16px; font-weight: 700; color: #0f172a;"><%= item.event.title %></h3>
+            <p style="font-size: 13px; color: var(--color-text); margin: 6px 0;">
+              Requested by <strong><%= item.event.requestedByStudentName || item.event.organizerName %></strong> for <strong><%= item.event.date %> (<%= item.event.startTime %> - <%= item.event.endTime %>)</strong>
+            </p>
+
+            <div style="margin-top: 12px; background-color: #ffffff; padding: 14px; border-radius: 8px; border: 1px solid #fecaca;">
+              <h4 style="font-size: 13px; font-weight: 700; color: #b91c1c; margin-bottom: 6px;">Conflicting Bookings at this Venue:</h4>
+              <% item.conflicts.forEach(function(c) { %>
+                <div style="font-size: 13px; color: #334155; padding: 6px 0; border-bottom: 1px dashed #e2e8f0;">
+                  • <strong><%= c.conflictingEventTitle %></strong> (Booked: <%= c.date %>, <%= c.existingTime %> by <%= c.organizer %>)
+                </div>
+              <% }); %>
+            </div>
+
+            <div style="margin-top: 16px; display: flex; justify-content: flex-end; gap: 10px;">
+              <form action="/admin/events/<%= item.event._id || item.event.id %>/hod-approve" method="POST" style="display: inline;">
+                <input type="hidden" name="conflictOverride" value="true" />
+                <input type="hidden" name="overrideReason" value="HOD schedule conflict override." />
+                <button type="submit" class="btn btn--warn btn--sm" onclick="return confirm('Confirm intentional HOD override for this conflicting schedule?');">
+                  ⚡ HOD Override & Publish
+                </button>
+              </form>
+              <form action="/admin/events/<%= item.event._id || item.event.id %>/hod-reject" method="POST" style="display: inline;" onsubmit="return confirm('Reject this conflicting event request?');">
+                <button type="submit" class="btn btn--reject btn--sm">
+                  ✗ Reject Request
+                </button>
+              </form>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+  </section>
+
+</div>

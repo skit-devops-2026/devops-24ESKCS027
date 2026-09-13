@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= typeof pageTitle !== 'undefined' ? pageTitle + ' | ' : '' %>EventHive Admin</title>
+  <title><%= typeof pageTitle !== 'undefined' ? pageTitle + ' | ' : '' %>EventHive HOD Admin</title>
   <link rel="stylesheet" href="/css/admin.css">
 </head>
 <body class="admin-body">
@@ -15,7 +15,7 @@
         <span class="sidebar-logo">🐝</span>
         <div>
           <h2 class="sidebar-title">EventHive</h2>
-          <span class="sidebar-subtitle">Admin Workspace</span>
+          <span class="sidebar-subtitle">HOD / Admin Portal</span>
         </div>
       </div>
     </div>
@@ -25,19 +25,7 @@
         <li>
           <a href="/admin/dashboard" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'dashboard' ? 'active' : '' %>">
             <span class="nav-icon">📊</span>
-            <span class="nav-text">Dashboard</span>
-          </a>
-        </li>
-        <li>
-          <a href="/admin/users" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'users' ? 'active' : '' %>">
-            <span class="nav-icon">👥</span>
-            <span class="nav-text">User Management</span>
-          </a>
-        </li>
-        <li>
-          <a href="/admin/organizers" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'organizers' ? 'active' : '' %>">
-            <span class="nav-icon">🏢</span>
-            <span class="nav-text">Organizers</span>
+            <span class="nav-text">HOD Dashboard</span>
           </a>
         </li>
         <li>
@@ -47,15 +35,54 @@
           </a>
         </li>
         <li>
+          <a href="/admin/conflicts" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'conflicts' ? 'active' : '' %>">
+            <span class="nav-icon">⚠️</span>
+            <span class="nav-text">Conflict Alerts</span>
+            <% if (typeof dashboardStats !== 'undefined' && dashboardStats.conflictAlertsCount > 0) { %>
+              <span class="badge-count" style="background-color: #ef4444;"><%= dashboardStats.conflictAlertsCount %></span>
+            <% } %>
+          </a>
+        </li>
+        <li>
+          <a href="/admin/venues" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'venues' ? 'active' : '' %>">
+            <span class="nav-icon">🏛️</span>
+            <span class="nav-text">Venue Schedules</span>
+          </a>
+        </li>
+        <li>
+          <a href="/admin/hosts" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'hosts' ? 'active' : '' %>">
+            <span class="nav-icon">👨‍🏫</span>
+            <span class="nav-text">Event Hosts / Teachers</span>
+          </a>
+        </li>
+        <li>
+          <a href="/admin/users" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'users' ? 'active' : '' %>">
+            <span class="nav-icon">👥</span>
+            <span class="nav-text">College Users</span>
+          </a>
+        </li>
+        <li>
+          <a href="/admin/organizers" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'organizers' ? 'active' : '' %>">
+            <span class="nav-icon">🏢</span>
+            <span class="nav-text">Coordinators & Clubs</span>
+          </a>
+        </li>
+        <li>
+          <a href="/admin/audit-logs" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'auditLogs' ? 'active' : '' %>">
+            <span class="nav-icon">📜</span>
+            <span class="nav-text">Audit Logs</span>
+          </a>
+        </li>
+        <li>
           <a href="/admin/providers" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'providers' ? 'active' : '' %>">
             <span class="nav-icon">🔧</span>
             <span class="nav-text">Service Providers</span>
           </a>
         </li>
         <li>
-          <a href="/admin/applications" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'applications' ? 'active' : '' %>">
-            <span class="nav-icon">📄</span>
-            <span class="nav-text">Event Applications</span>
+          <a href="/admin/reports" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'reports' ? 'active' : '' %>">
+            <span class="nav-icon">📈</span>
+            <span class="nav-text">Reports & Stats</span>
           </a>
         </li>
         <li>
@@ -65,12 +92,6 @@
             <% if (typeof unreadCount !== 'undefined' && unreadCount > 0) { %>
               <span class="badge-count"><%= unreadCount %></span>
             <% } %>
-          </a>
-        </li>
-        <li>
-          <a href="/admin/reports" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'reports' ? 'active' : '' %>">
-            <span class="nav-icon">📈</span>
-            <span class="nav-text">Reports & Stats</span>
           </a>
         </li>
       </ul>
@@ -93,7 +114,7 @@
         <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
           ☰
         </button>
-        <h1 class="page-title"><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Admin' %></h1>
+        <h1 class="page-title"><%= typeof pageTitle !== 'undefined' ? pageTitle : 'HOD Admin' %></h1>
       </div>
 
       <div class="top-nav-right">
@@ -105,10 +126,10 @@
         </a>
 
         <div class="admin-profile-chip">
-          <span class="admin-avatar">👤</span>
+          <span class="admin-avatar">👨‍🏫</span>
           <div class="admin-info-text">
-            <span class="admin-name"><%= typeof adminUser !== 'undefined' ? adminUser.name : 'Admin' %></span>
-            <span class="admin-role">Super Admin</span>
+            <span class="admin-name"><%= typeof adminUser !== 'undefined' ? adminUser.name : 'Dr. Arthur Pendelton' %></span>
+            <span class="admin-role">HOD / Chief Approval Authority</span>
           </div>
         </div>
 
@@ -125,7 +146,7 @@
       </div>
     <% } %>
 
-    <!-- Page Content (injected by child view) -->
+    <!-- Page Content -->
     <main class="main-content">
       <%- typeof content !== 'undefined' ? content : '' %>
     </main>

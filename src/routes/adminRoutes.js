@@ -3,16 +3,12 @@ const router = express.Router();
 const adminController = require('../controllers/adminController');
 const { requireAdmin, redirectIfAuthenticated } = require('../middleware/auth');
 
-// =========================================================================
-// AUTHENTICATION ROUTES (Public to admins)
-// =========================================================================
+// Auth routes
 router.get('/login', redirectIfAuthenticated, adminController.getLoginPage);
 router.post('/login', redirectIfAuthenticated, adminController.postLogin);
 router.get('/logout', adminController.logout);
 
-// =========================================================================
-// PROTECTED ADMIN ROUTES
-// =========================================================================
+// Protected HOD / Admin routes
 router.use(requireAdmin);
 
 // Dashboard
@@ -23,33 +19,36 @@ router.get('/users', adminController.getUsers);
 router.post('/users/:id/status', adminController.postToggleUserStatus);
 router.post('/users/:id/delete', adminController.deleteUser);
 
-// 2. Organizer Management
-router.get('/organizers', adminController.getOrganizers);
-router.post('/organizers/:id/approve', adminController.postApproveOrganizer);
-router.post('/organizers/:id/reject', adminController.postRejectOrganizer);
+// 2. Event Hosts / Teachers
+router.get('/hosts', adminController.getHosts);
 
-// 3. Event Management & Approvals
+// 3. Organizer / Coordinator Management
+router.get('/organizers', adminController.getOrganizers);
+
+// 4. Events & HOD Final Approvals
 router.get('/events', adminController.getEvents);
-router.get('/approvals', (req, res) => res.redirect('/admin/events?status=pending'));
-router.post('/events/:id/approve', adminController.postApproveEvent);
-router.post('/events/:id/reject', adminController.postRejectEvent);
+router.get('/approvals', (req, res) => res.redirect('/admin/events?status=HOD_REVIEW'));
+router.post('/events/:id/approve', adminController.postHodApproveEvent);
+router.post('/events/:id/hod-approve', adminController.postHodApproveEvent);
+router.post('/events/:id/reject', adminController.postHodRejectEvent);
+router.post('/events/:id/hod-reject', adminController.postHodRejectEvent);
+router.post('/events/:id/request-changes', adminController.postHodRequestChanges);
 router.post('/events/:id/delete', adminController.postDeleteEvent);
 
-// 4. Service Providers
+// 5. Schedule Conflict Alerts & Venue Matrix
+router.get('/conflicts', adminController.getConflicts);
+router.get('/venues', adminController.getVenues);
+
+// 6. System Audit Logs
+router.get('/audit-logs', adminController.getAuditLogs);
+
+// 7. Service Providers & Applications (Preserved)
 router.get('/providers', adminController.getProviders);
-router.post('/providers/:id/approve', adminController.postApproveProvider);
-router.post('/providers/:id/reject', adminController.postRejectProvider);
-
-// 5. Event Applications
 router.get('/applications', adminController.getApplications);
-router.post('/applications/:id/accept', adminController.postAcceptApplication);
-router.post('/applications/:id/reject', adminController.postRejectApplication);
 
-// 6. Notifications
+// 8. Notifications & Reports
 router.get('/notifications', adminController.getNotifications);
 router.post('/notifications/mark-read', adminController.postMarkNotificationsRead);
-
-// 7. Reports & Analytics
 router.get('/reports', adminController.getReports);
 
 module.exports = router;

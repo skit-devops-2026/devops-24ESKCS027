@@ -1,0 +1,55 @@
+<!-- Event Hosts / Teachers Directory -->
+<div class="page-container">
+
+  <div class="toolbar-card" style="display: flex; justify-content: space-between; align-items: center;">
+    <div>
+      <h2 style="font-size: 16px; font-weight: 700; color: #0f172a;">Campus Event Hosts & Faculty Mentors (<%= hosts.length %>)</h2>
+      <p style="font-size: 13px; color: var(--color-text-light); margin-top: 2px;">Faculty members assigned to verify student event proposals and check venue conflicts.</p>
+    </div>
+  </div>
+
+  <section class="dashboard-section">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Faculty Host / Teacher</th>
+            <th>Department</th>
+            <th>Designation</th>
+            <th>Contact</th>
+            <th>Specialization</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% hosts.forEach(function(h) { %>
+            <tr>
+              <td>
+                <div class="user-cell">
+                  <span style="font-size: 24px;">👨‍🏫</span>
+                  <div>
+                    <strong class="user-name"><%= h.name %></strong>
+                    <span class="user-email">ID: <%= h.id || h._id %></span>
+                  </div>
+                </div>
+              </td>
+              <td><%= h.department %></td>
+              <td><strong><%= h.designation %></strong></td>
+              <td>
+                <span class="user-email">✉️ <%= h.email %></span>
+                <span class="user-email">📞 <%= h.phone %></span>
+              </td>
+              <td><span style="font-size: 12px; color: var(--color-text);"><%= h.specialization %></span></td>
+              <td>
+                <span class="status-badge status-badge--approved">
+                  <%= h.status || 'Active' %>
+                </span>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>

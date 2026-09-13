@@ -1,4 +1,4 @@
-<!-- Event Management & Approvals Page -->
+<!-- Event Management & HOD Approvals Page -->
 <div class="page-container">
 
   <!-- Header Controls & Filters -->
@@ -9,7 +9,7 @@
         <input
           type="text"
           name="search"
-          placeholder="Search events, organizers, venues, topics..."
+          placeholder="Search events, organizers, faculty hosts, venues..."
           value="<%= filters.search %>"
           class="form-input search-input"
         />
@@ -19,9 +19,21 @@
         <label class="filter-label">Status:</label>
         <select name="status" class="form-select" onchange="this.form.submit()">
           <option value="All" <%= filters.status === 'All' ? 'selected' : '' %>>All Statuses</option>
-          <option value="pending" <%= filters.status === 'pending' ? 'selected' : '' %>>Pending Approval</option>
-          <option value="approved" <%= filters.status === 'approved' ? 'selected' : '' %>>Approved / Live</option>
-          <option value="rejected" <%= filters.status === 'rejected' ? 'selected' : '' %>>Rejected</option>
+          <option value="HOD_REVIEW" <%= filters.status === 'HOD_REVIEW' ? 'selected' : '' %>>Pending HOD Review</option>
+          <option value="HOST_REVIEW" <%= filters.status === 'HOST_REVIEW' ? 'selected' : '' %>>Host Review</option>
+          <option value="SUBMITTED" <%= filters.status === 'SUBMITTED' ? 'selected' : '' %>>Student Submitted</option>
+          <option value="CHANGES_REQUESTED" <%= filters.status === 'CHANGES_REQUESTED' ? 'selected' : '' %>>Changes Requested</option>
+          <option value="PUBLISHED" <%= filters.status === 'PUBLISHED' ? 'selected' : '' %>>Published / Approved</option>
+          <option value="REJECTED" <%= filters.status === 'REJECTED' ? 'selected' : '' %>>Rejected</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label">Visibility:</label>
+        <select name="visibility" class="form-select" onchange="this.form.submit()">
+          <option value="All" <%= filters.visibility === 'All' ? 'selected' : '' %>>All Visibility</option>
+          <option value="COLLEGE_ONLY" <%= filters.visibility === 'COLLEGE_ONLY' ? 'selected' : '' %>>College Only 🔒</option>
+          <option value="PUBLIC" <%= filters.visibility === 'PUBLIC' ? 'selected' : '' %>>Public 🌐</option>
         </select>
       </div>
 
@@ -38,7 +50,7 @@
       </div>
 
       <button type="submit" class="btn btn--primary btn--sm">Filter</button>
-      <% if (filters.search || filters.status !== 'All' || filters.category !== 'All') { %>
+      <% if (filters.search || filters.status !== 'All' || filters.category !== 'All' || filters.visibility !== 'All') { %>
         <a href="/admin/events" class="btn btn--outline btn--sm">Reset</a>
       <% } %>
     </form>
@@ -47,14 +59,14 @@
   <!-- Events List Section -->
   <section class="dashboard-section">
     <div class="section-header">
-      <h2 class="section-title">All Campus Events (<%= events.length %>)</h2>
+      <h2 class="section-title">Campus Event Governance Pipeline (<%= events.length %>)</h2>
     </div>
 
     <% if (events.length === 0) { %>
       <div class="empty-state">
         <span class="empty-icon">🎪</span>
         <h3>No events found</h3>
-        <p>No campus events match your active filters.</p>
+        <p>No campus events match your active filter criteria.</p>
         <a href="/admin/events" class="btn btn--primary btn--sm" style="margin-top: 12px;">Clear Filters</a>
       </div>
     <% } else { %>
@@ -62,76 +74,103 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>Event</th>
-              <th>Category</th>
-              <th>Organizer</th>
+              <th>Event Title</th>
+              <th>Visibility & Access</th>
               <th>Date & Venue</th>
-              <th>Capacity</th>
+              <th>Faculty Host</th>
+              <th>Coordinator / Student</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             <% events.forEach(function(evt) { %>
-              <tr>
+              <tr style="<%= evt.hasConflict ? 'background-color: #fff1f2;' : '' %>">
                 <td>
                   <div>
                     <strong class="user-name"><%= evt.title %></strong>
-                    <span class="user-email"><%= evt.description %></span>
-                  </div>
-                </td>
-                <td>
-                  <span class="badge badge--<%= evt.category.toLowerCase() %>">
-                    <%= evt.category %>
-                  </span>
-                </td>
-                <td>
-                  <div>
-                    <strong><%= evt.organizer %></strong>
-                    <span class="user-email"><%= evt.department %></span>
+                    <span class="user-email"><%= evt.category %> • <%= evt.department %></span>
+                    <% if (evt.hasConflict) { %>
+                      <div style="font-size: 11px; color: #dc2626; font-weight: 700; margin-top: 3px;">
+                        ⚠️ SCHEDULE CONFLICT DETECTED
+                      </div>
+                    <% } %>
                   </div>
                 </td>
                 <td>
                   <div>
-                    <span><%= new Date(evt.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) %></span>
+                    <span class="badge <%= evt.visibility === 'PUBLIC' ? 'badge--workshop' : 'badge--technical' %>">
+                      <%= evt.visibility === 'PUBLIC' ? '🌐 Public Event' : '🔒 College Only' %>
+                    </span>
+                    <div style="font-size: 11px; color: var(--color-text-light); margin-top: 2px;">
+                      <%= evt.registrationAccess === 'PUBLIC' ? 'Open to External' : 'Students Only' %>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div>
+                    <strong><%= evt.date %></strong>
+                    <span class="user-email">⏰ <%= evt.startTime || '10:00' %> - <%= evt.endTime || '16:00' %></span>
                     <span class="user-email">📍 <%= evt.venue %></span>
                   </div>
                 </td>
                 <td>
-                  <strong><%= evt.totalSeats - evt.availableSeats %></strong> / <%= evt.totalSeats %>
+                  <div>
+                    <strong><%= evt.hostName || 'Pending Assignment' %></strong>
+                    <span class="user-email"><%= evt.hostDepartment || '—' %></span>
+                  </div>
                 </td>
                 <td>
-                  <span class="status-badge status-badge--<%= evt.status %>">
-                    <%= evt.status.charAt(0).toUpperCase() + evt.status.slice(1) %>
+                  <div>
+                    <strong><%= evt.coordinatorName || evt.organizerName || 'Student Club' %></strong>
+                    <span class="user-email"><%= evt.requestedByStudentName ? `Student: ${evt.requestedByStudentName}` : '' %></span>
+                  </div>
+                </td>
+                <td>
+                  <span class="status-badge status-badge--<%= evt.status.toLowerCase() %>">
+                    <%= evt.status %>
                   </span>
                 </td>
                 <td>
                   <div class="action-btn-group">
-                    <% if (evt.status === 'pending') { %>
-                      <form action="/admin/events/<%= evt.id %>/approve" method="POST" style="display:inline;">
-                        <button type="submit" class="btn btn--sm btn--approve" title="Approve Event">
-                          ✓ Approve
+                    <% if (evt.status === 'HOD_REVIEW' || evt.status === 'HOST_REVIEW' || evt.status === 'SUBMITTED' || evt.status === 'CHANGES_REQUESTED') { %>
+                      <form action="/admin/events/<%= evt._id || evt.id %>/hod-approve" method="POST" style="display:inline;">
+                        <% if (evt.hasConflict) { %>
+                          <input type="hidden" name="conflictOverride" value="true" />
+                          <input type="hidden" name="overrideReason" value="HOD schedule override." />
+                          <button type="submit" class="btn btn--sm btn--warn" title="Override & Approve" onclick="return confirm('⚠️ Event has a venue conflict! Confirm HOD override?');">
+                            ⚡ Override
+                          </button>
+                        <% } else { %>
+                          <button type="submit" class="btn btn--sm btn--approve" title="HOD Final Approval">
+                            ✓ Final Approve
+                          </button>
+                        <% } %>
+                      </form>
+
+                      <form action="/admin/events/<%= evt._id || evt.id %>/request-changes" method="POST" style="display:inline;" onsubmit="return confirm('Request adjustments from Coordinator for <%= evt.title %>?');">
+                        <input type="hidden" name="remarks" value="HOD requested adjustments to schedule/capacity." />
+                        <button type="submit" class="btn btn--sm btn--outline" title="Request Changes">
+                          🔄 Changes
                         </button>
                       </form>
-                      <form action="/admin/events/<%= evt.id %>/reject" method="POST" style="display:inline;" onsubmit="return confirm('Reject event: <%= evt.title %>?');">
+
+                      <form action="/admin/events/<%= evt._id || evt.id %>/hod-reject" method="POST" style="display:inline;" onsubmit="return confirm('Reject event: <%= evt.title %>?');">
+                        <input type="hidden" name="remarks" value="Rejected during HOD review." />
                         <button type="submit" class="btn btn--sm btn--reject" title="Reject Event">
                           ✗ Reject
                         </button>
                       </form>
-                    <% } else if (evt.status === 'approved') { %>
-                      <form action="/admin/events/<%= evt.id %>/reject" method="POST" style="display:inline;" onsubmit="return confirm('Unpublish/reject event: <%= evt.title %>?');">
-                        <button type="submit" class="btn btn--sm btn--warn" title="Reject / Unpublish">
-                          Reject
-                        </button>
-                      </form>
-                    <% } else { %>
-                      <form action="/admin/events/<%= evt.id %>/approve" method="POST" style="display:inline;">
-                        <button type="submit" class="btn btn--sm btn--approve" title="Re-approve Event">
-                          Re-Approve
+                    <% } else if (evt.status === 'PUBLISHED' || evt.status === 'APPROVED') { %>
+                      <form action="/admin/events/<%= evt._id || evt.id %>/hod-reject" method="POST" style="display:inline;" onsubmit="return confirm('Unpublish event: <%= evt.title %>?');">
+                        <input type="hidden" name="remarks" value="Event unpublished by HOD." />
+                        <button type="submit" class="btn btn--sm btn--warn" title="Unpublish">
+                          Unpublish
                         </button>
                       </form>
                     <% } %>
-                    <form action="/admin/events/<%= evt.id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm('Delete event permanently?');">
+
+                    <form action="/admin/events/<%= evt._id || evt.id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm('Delete event record permanently?');">
                       <button type="submit" class="btn btn--sm btn--outline" title="Delete">
                         🗑️
                       </button>

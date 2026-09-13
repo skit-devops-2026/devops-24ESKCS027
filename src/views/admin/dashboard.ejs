@@ -1,114 +1,198 @@
-<!-- Dashboard Stats Cards -->
-<section class="dashboard-cards">
-  <div class="stat-card stat-card--users">
-    <div class="stat-card__icon">👥</div>
-    <div class="stat-card__info">
-      <span class="stat-card__value"><%= stats.totalUsers.toLocaleString() %></span>
-      <span class="stat-card__label">Total Users</span>
+<!-- HOD Dashboard -->
+<div class="page-container">
+
+  <!-- College Branding Banner -->
+  <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #ffffff; padding: 20px 24px; border-radius: 12px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+      <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: 700;">Campus Authority Portal</span>
+      <h2 style="font-size: 20px; font-weight: 800; color: #f8fafc; margin-top: 2px;"><%= stats.collegeName %></h2>
+      <p style="font-size: 13px; color: #cbd5e1; margin-top: 4px;">Single-College Event Governance, Schedule Verification, and Final Approval Pipeline.</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <a href="/admin/conflicts" class="btn btn--warn btn--sm" style="font-weight: 700;">⚠️ Check Conflicts (<%= stats.conflictAlertsCount %>)</a>
+      <a href="/admin/venues" class="btn btn--outline btn--sm" style="border-color: #475569; color: #f8fafc;">🏛️ Venue Matrix</a>
     </div>
   </div>
 
-  <div class="stat-card stat-card--organizers">
-    <div class="stat-card__icon">🏢</div>
-    <div class="stat-card__info">
-      <span class="stat-card__value"><%= stats.totalOrganizers %></span>
-      <span class="stat-card__label">Total Organizers</span>
-    </div>
-  </div>
-
-  <div class="stat-card stat-card--events">
-    <div class="stat-card__icon">🎪</div>
-    <div class="stat-card__info">
-      <span class="stat-card__value"><%= stats.totalEvents %></span>
-      <span class="stat-card__label">Total Events</span>
-    </div>
-  </div>
-
-  <div class="stat-card stat-card--approvals">
-    <div class="stat-card__icon">⏳</div>
-    <div class="stat-card__info">
-      <span class="stat-card__value"><%= stats.pendingApprovals %></span>
-      <span class="stat-card__label">Pending Approvals</span>
-    </div>
-  </div>
-
-  <div class="stat-card stat-card--providers">
-    <div class="stat-card__icon">🔧</div>
-    <div class="stat-card__info">
-      <span class="stat-card__value"><%= stats.serviceProviders %></span>
-      <span class="stat-card__label">Service Providers</span>
-    </div>
-  </div>
-
-  <div class="stat-card stat-card--applications">
-    <div class="stat-card__icon">📄</div>
-    <div class="stat-card__info">
-      <span class="stat-card__value"><%= stats.pendingApplications %></span>
-      <span class="stat-card__label">Pending Applications</span>
-    </div>
-  </div>
-</section>
-
-<!-- Recent Events -->
-<section class="dashboard-section">
-  <div class="section-header">
-    <h2 class="section-title">Recent Events</h2>
-  </div>
-  <div class="table-responsive">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Event</th>
-          <th>Organizer</th>
-          <th>Date</th>
-          <th>Status</th>
-          <th>Attendees</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% recentEvents.forEach(function(event) { %>
-          <tr>
-            <td><strong><%= event.title %></strong></td>
-            <td><%= event.organizer %></td>
-            <td><%= new Date(event.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) %></td>
-            <td>
-              <span class="status-badge status-badge--<%= event.status %>">
-                <%= event.status.charAt(0).toUpperCase() + event.status.slice(1) %>
-              </span>
-            </td>
-            <td><%= event.attendees > 0 ? event.attendees.toLocaleString() : '—' %></td>
-          </tr>
-        <% }); %>
-      </tbody>
-    </table>
-  </div>
-</section>
-
-<!-- Pending Approvals -->
-<section class="dashboard-section">
-  <div class="section-header">
-    <h2 class="section-title">Pending Approvals</h2>
-    <span class="section-count"><%= pendingApprovals.length %> pending</span>
-  </div>
-  <div class="approval-list">
-    <% pendingApprovals.forEach(function(item) { %>
-      <div class="approval-card">
-        <div class="approval-card__header">
-          <span class="approval-card__type approval-card__type--<%= item.type %>">
-            <%= item.type === 'event' ? '🎪 Event' : item.type === 'organizer' ? '🏢 Organizer' : '🔧 Service Provider' %>
-          </span>
-          <span class="approval-card__date"><%= new Date(item.requestedDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) %></span>
-        </div>
-        <h3 class="approval-card__title"><%= item.title %></h3>
-        <p class="approval-card__desc"><%= item.description %></p>
-        <div class="approval-card__footer">
-          <span class="approval-card__requester">Requested by: <strong><%= item.requestedBy %></strong></span>
-          <div class="approval-card__actions">
-            <button class="btn btn--approve" title="Approve">✓ Approve</button>
-            <button class="btn btn--reject" title="Reject">✗ Reject</button>
-          </div>
-        </div>
+  <!-- HOD KPI Cards -->
+  <section class="dashboard-cards">
+    <div class="stat-card" style="border-left: 4px solid #ef4444;">
+      <div class="stat-card__icon" style="background-color: #fee2e2; color: #ef4444;">⏳</div>
+      <div class="stat-card__info">
+        <span class="stat-card__value"><%= stats.pendingHODApprovals %></span>
+        <span class="stat-card__label">Pending HOD Approvals</span>
       </div>
-    <% }); %>
-  </div>
-</section>
+    </div>
+
+    <div class="stat-card" style="border-left: 4px solid #f59e0b;">
+      <div class="stat-card__icon" style="background-color: #fef3c7; color: #d97706;">⚠️</div>
+      <div class="stat-card__info">
+        <span class="stat-card__value"><%= stats.conflictAlertsCount %></span>
+        <span class="stat-card__label">Schedule Conflict Alerts</span>
+      </div>
+    </div>
+
+    <div class="stat-card" style="border-left: 4px solid #10b981;">
+      <div class="stat-card__icon" style="background-color: #ecfdf5; color: #059669;">🎪</div>
+      <div class="stat-card__info">
+        <span class="stat-card__value"><%= stats.approvedEvents %></span>
+        <span class="stat-card__label">Published Campus Events</span>
+      </div>
+    </div>
+
+    <div class="stat-card" style="border-left: 4px solid #6366f1;">
+      <div class="stat-card__icon" style="background-color: #e0e7ff; color: #4f46e5;">👨‍🏫</div>
+      <div class="stat-card__info">
+        <span class="stat-card__value"><%= stats.totalHosts %></span>
+        <span class="stat-card__label">Faculty Event Hosts</span>
+      </div>
+    </div>
+
+    <div class="stat-card" style="border-left: 4px solid #3b82f6;">
+      <div class="stat-card__icon" style="background-color: #eff6ff; color: #2563eb;">🎓</div>
+      <div class="stat-card__info">
+        <span class="stat-card__value"><%= stats.totalStudents.toLocaleString() %></span>
+        <span class="stat-card__label">Verified Students</span>
+      </div>
+    </div>
+
+    <div class="stat-card" style="border-left: 4px solid #8b5cf6;">
+      <div class="stat-card__icon" style="background-color: #f5f3ff; color: #7c3aed;">🔒</div>
+      <div class="stat-card__info">
+        <span class="stat-card__value"><%= stats.collegeOnlyEvents %> / <%= stats.totalEvents %></span>
+        <span class="stat-card__label">College-Only vs Public</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOD Approval Queue -->
+  <section class="dashboard-section">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Host-Approved Events Awaiting Final HOD Approval</h2>
+        <span style="font-size: 12px; color: var(--color-text-light);">Only HOD final approval officially publishes events for student registration.</span>
+      </div>
+      <span class="section-count"><%= pendingApprovals.length %> in approval pipeline</span>
+    </div>
+
+    <% if (pendingApprovals.length === 0) { %>
+      <div class="empty-state">
+        <span class="empty-icon">✅</span>
+        <h3>No pending HOD approvals</h3>
+        <p>All host-verified events have been reviewed. The queue is clear.</p>
+      </div>
+    <% } else { %>
+      <div class="approval-list">
+        <% pendingApprovals.forEach(function(item) { %>
+          <div class="approval-card <%= item.hasConflict ? 'approval-card--conflict' : '' %>" style="border: 1px solid <%= item.hasConflict ? '#f87171' : 'var(--color-border)' %>; margin-bottom: 14px; padding: 18px; border-radius: 10px; background-color: #ffffff;">
+            <div class="approval-card__header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="badge badge--<%= item.category ? item.category.toLowerCase() : 'technical' %>"><%= item.category %></span>
+                <span class="status-badge status-badge--<%= item.visibility === 'PUBLIC' ? 'approved' : 'pending' %>"><%= item.visibility %></span>
+                <span class="badge" style="background-color: #e0f2fe; color: #0369a1;"><%= item.registrationAccess === 'PUBLIC' ? '🌐 Public Registration' : '🔒 College Students Only' %></span>
+                <span class="status-badge status-badge--<%= item.status.toLowerCase() %>"><%= item.status %></span>
+              </div>
+              <span class="approval-card__date" style="font-size: 12px; color: var(--color-text-light);">Submitted: <%= item.requestedDate %></span>
+            </div>
+
+            <h3 class="approval-card__title" style="font-size: 16px; font-weight: 700; color: #0f172a;"><%= item.title %></h3>
+            <p class="approval-card__desc" style="font-size: 13px; color: var(--color-text); margin: 6px 0;"><%= item.description %></p>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; background-color: var(--color-bg); padding: 10px 14px; border-radius: 8px; font-size: 12px; margin: 10px 0;">
+              <div><strong>📅 Date & Time:</strong> <%= item.date %> (<%= item.time %>)</div>
+              <div><strong>🏛️ Venue:</strong> <%= item.venue %></div>
+              <div><strong>👨‍🏫 Assigned Host:</strong> <%= item.hostName %> (<%= item.hostDepartment %>)</div>
+              <div><strong>👤 Coordinator:</strong> <%= item.coordinatorName %></div>
+            </div>
+
+            <% if (item.hasConflict) { %>
+              <div style="background-color: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; padding: 10px 14px; border-radius: 8px; font-size: 12px; margin: 10px 0;">
+                <div style="font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                  <span>⚠️</span> SCHEDULE CONFLICT DETECTED:
+                </div>
+                <div style="margin-top: 4px;"><%= item.conflictMessage %></div>
+              </div>
+            <% } %>
+
+            <!-- Approval History Preview -->
+            <% if (item.approvalHistory && item.approvalHistory.length > 0) { %>
+              <div style="margin: 8px 0; padding: 8px 12px; background-color: #f8fafc; border-radius: 6px; font-size: 11px; color: #475569;">
+                <strong>📜 Recent Activity:</strong>
+                <%= item.approvalHistory[item.approvalHistory.length - 1].actor %> (<%= item.approvalHistory[item.approvalHistory.length - 1].role %>) -
+                <em><%= item.approvalHistory[item.approvalHistory.length - 1].action %>: "<%= item.approvalHistory[item.approvalHistory.length - 1].comment %>"</em>
+              </div>
+            <% } %>
+
+            <div class="approval-card__footer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+              <span class="approval-card__requester" style="font-size: 12px;">Department: <strong><%= item.department %></strong></span>
+              <div class="approval-card__actions" style="display: flex; gap: 8px;">
+                <form action="/admin/events/<%= item.id %>/hod-approve" method="POST" style="display: inline;">
+                  <% if (item.hasConflict) { %>
+                    <input type="hidden" name="conflictOverride" value="true" />
+                    <input type="hidden" name="overrideReason" value="HOD administrative schedule override granted." />
+                    <button type="submit" class="btn btn--warn btn--sm" title="Approve with Override" onclick="return confirm('⚠️ Warning: Schedule collision detected. Confirm HOD Override & Final Approval?');">
+                      ⚡ Override & Approve
+                    </button>
+                  <% } else { %>
+                    <button type="submit" class="btn btn--approve btn--sm" title="HOD Final Approval">
+                      ✓ Final Approve & Publish
+                    </button>
+                  <% } %>
+                </form>
+
+                <form action="/admin/events/<%= item.id %>/request-changes" method="POST" style="display: inline;" onsubmit="return confirm('Request adjustments from Coordinator for <%= item.title %>?');">
+                  <input type="hidden" name="remarks" value="HOD requested adjustments to schedule/capacity." />
+                  <button type="submit" class="btn btn--outline btn--sm" title="Request Changes">
+                    🔄 Request Changes
+                  </button>
+                </form>
+
+                <form action="/admin/events/<%= item.id %>/hod-reject" method="POST" style="display: inline;" onsubmit="return confirm('Reject event request: <%= item.title %>?');">
+                  <input type="hidden" name="remarks" value="Rejected during HOD administrative review." />
+                  <button type="submit" class="btn btn--reject btn--sm" title="Reject Request">
+                    ✗ Reject
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+  </section>
+
+  <!-- Recent System Audit Activity -->
+  <section class="dashboard-section">
+    <div class="section-header">
+      <h2 class="section-title">Event Governance Audit Trail</h2>
+      <a href="/admin/audit-logs" class="btn btn--outline btn--sm">View All Logs →</a>
+    </div>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Actor</th>
+            <th>Role</th>
+            <th>Action</th>
+            <th>Event / Target</th>
+            <th>Governance Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% (auditLogs || []).slice(0, 5).forEach(function(log) { %>
+            <tr>
+              <td><code><%= log.timestamp %></code></td>
+              <td><strong><%= log.actorName %></strong></td>
+              <td><span class="badge badge--student"><%= log.actorRole %></span></td>
+              <td><strong style="color: #4338ca;"><%= log.action %></strong></td>
+              <td><%= log.targetTitle %></td>
+              <td><span style="font-size: 12px; color: var(--color-text-light);"><%= log.remarks %></span></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>

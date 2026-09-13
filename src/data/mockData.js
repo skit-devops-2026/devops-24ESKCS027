@@ -1,528 +1,142 @@
 /**
- * Mock Data Module for EventHive Admin Dashboard
- *
- * This module provides structured in-memory state and helper methods for:
- * - Admin Authentication
- * - Dashboard Statistics
- * - User Management
- * - Organizer Management
- * - Event Management & Approvals
- * - Service Provider Management
- * - Event Applications
- * - Admin Notifications
- * - Analytics & Reports
- *
- * All operations return Promises to match the async pattern of real DB models.
+ * Mock Data Module for EventHive HOD / Admin Panel
+ * Synchronized with the centralized DataStore in backend/models/store.js
  */
 
-// --- In-Memory State ---
+const store = require('../../backend/models/store');
 
-let users = [
-  {
-    id: 1,
-    name: 'Aashish Kumawat',
-    email: 'aashish.student@eventhive.edu',
-    rollNumber: '23BCS10142',
-    department: 'Computer Science & Engineering',
-    role: 'Student',
-    status: 'Active',
-    joinedDate: '2026-01-15',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
-    registeredEventsCount: 3
-  },
-  {
-    id: 2,
-    name: 'Priya Sharma',
-    email: 'priya.sharma@eventhive.edu',
-    rollNumber: '23ECE10088',
-    department: 'Electronics & Communication',
-    role: 'Organizer',
-    status: 'Active',
-    joinedDate: '2026-02-10',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80',
-    registeredEventsCount: 5
-  },
-  {
-    id: 3,
-    name: 'Rohan Mehta',
-    email: 'rohan.mehta@eventhive.edu',
-    rollNumber: '24ME10204',
-    department: 'Mechanical Engineering',
-    role: 'Student',
-    status: 'Active',
-    joinedDate: '2026-02-18',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
-    registeredEventsCount: 1
-  },
-  {
-    id: 4,
-    name: 'Ananya Verma',
-    email: 'ananya.verma@eventhive.edu',
-    rollNumber: '23MBA10012',
-    department: 'Management Studies',
-    role: 'Student',
-    status: 'Inactive',
-    joinedDate: '2026-03-01',
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&auto=format&fit=crop&q=80',
-    registeredEventsCount: 0
-  },
-  {
-    id: 5,
-    name: 'Sameer Khan',
-    email: 'sameer.khan@eventhive.edu',
-    rollNumber: '22BCS10005',
-    department: 'Computer Science & Engineering',
-    role: 'Organizer',
-    status: 'Active',
-    joinedDate: '2025-11-20',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
-    registeredEventsCount: 8
-  },
-  {
-    id: 6,
-    name: 'Kavita Joshi',
-    email: 'kavita.joshi@eventhive.edu',
-    rollNumber: '24BT10045',
-    department: 'Biotechnology',
-    role: 'Student',
-    status: 'Suspended',
-    joinedDate: '2026-04-12',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80',
-    registeredEventsCount: 0
-  }
-];
-
-let organizers = [
-  {
-    id: 1,
-    name: 'ACM Student Chapter',
-    leadName: 'Sameer Khan',
-    email: 'acm@eventhive.edu',
-    department: 'Computer Science & Engineering',
-    eventsHosted: 12,
-    status: 'Approved',
-    verificationDate: '2026-01-10',
-    description: 'Premier technical club hosting hackathons, coding contests, and tech symposiums.'
-  },
-  {
-    id: 2,
-    name: 'Cultural Committee',
-    leadName: 'Priya Sharma',
-    email: 'cultural@eventhive.edu',
-    department: 'Student Affairs',
-    eventsHosted: 8,
-    status: 'Approved',
-    verificationDate: '2026-01-15',
-    description: 'Official student body organizing campus fests, dance, drama, and music events.'
-  },
-  {
-    id: 3,
-    name: 'AI & Robotics Club',
-    leadName: 'Vikram Sengupta',
-    email: 'robotics@eventhive.edu',
-    department: 'Electronics & Communication',
-    eventsHosted: 5,
-    status: 'Approved',
-    verificationDate: '2026-02-01',
-    description: 'Hardware, drone building, and deep learning workshop organizers.'
-  },
-  {
-    id: 4,
-    name: 'Debate & Literary Society',
-    leadName: 'Neha Malhotra',
-    email: 'debsoc@eventhive.edu',
-    department: 'Humanities & Social Sciences',
-    eventsHosted: 2,
-    status: 'Pending',
-    verificationDate: null,
-    description: 'Campus forum for parliamentary debates, creative writing, and poetry slams.'
-  },
-  {
-    id: 5,
-    name: 'E-Cell (Entrepreneurship Cell)',
-    leadName: 'Arjun Nambiar',
-    email: 'ecell@eventhive.edu',
-    department: 'Management Studies',
-    eventsHosted: 4,
-    status: 'Pending',
-    verificationDate: null,
-    description: 'Promoting student startups, angel pitch sessions, and business conclaves.'
-  },
-  {
-    id: 6,
-    name: 'Gaming & eSports Syndicate',
-    leadName: 'Devansh Roy',
-    email: 'esports@eventhive.edu',
-    department: 'Computer Science & Engineering',
-    eventsHosted: 1,
-    status: 'Rejected',
-    verificationDate: '2026-08-01',
-    description: 'Gaming tournaments organization club.'
-  }
-];
-
-let events = [
-  {
-    id: 1,
-    title: 'HackHive 2026: Annual Campus Hackathon',
-    category: 'Technical',
-    department: 'Computer Science & Engineering',
-    organizer: 'ACM Student Chapter',
-    date: '2026-09-15',
-    time: '09:00 AM - 09:00 AM (Next Day)',
-    venue: 'Main Auditorium & Innovation Lab',
-    totalSeats: 150,
-    availableSeats: 42,
-    status: 'approved',
-    attendees: 108,
-    description: '24-hour sprint to build innovative solutions for campus and societal problems.'
-  },
-  {
-    id: 2,
-    title: 'AI & Deep Learning Hands-on Workshop',
-    category: 'Workshop',
-    department: 'Computer Science & Engineering',
-    organizer: 'AI & Robotics Club',
-    date: '2026-09-02',
-    time: '02:00 PM - 05:30 PM',
-    venue: 'CS Seminar Hall 2',
-    totalSeats: 80,
-    availableSeats: 18,
-    status: 'approved',
-    attendees: 62,
-    description: 'Comprehensive workshop covering Transformers, PyTorch, and neural networks.'
-  },
-  {
-    id: 3,
-    title: 'Rhythm & Beats: Inter-College Cultural Fest',
-    category: 'Cultural',
-    department: 'Student Affairs',
-    organizer: 'Cultural Committee',
-    date: '2026-09-20',
-    time: '04:00 PM - 10:00 PM',
-    venue: 'Open Air Amphitheatre',
-    totalSeats: 500,
-    availableSeats: 120,
-    status: 'approved',
-    attendees: 380,
-    description: 'Annual cultural extravaganza featuring battle of the bands and dance.'
-  },
-  {
-    id: 4,
-    title: 'Startup Pitch Night & Investor Meet',
-    category: 'Seminar',
-    department: 'Management Studies',
-    organizer: 'E-Cell',
-    date: '2026-10-05',
-    time: '05:00 PM - 08:30 PM',
-    venue: 'Management Conclave Hall',
-    totalSeats: 120,
-    availableSeats: 120,
-    status: 'pending',
-    attendees: 0,
-    description: 'Platform for student startups to pitch to angel investors and mentors.'
-  },
-  {
-    id: 5,
-    title: 'RoboWars & Combat Arena Tournament',
-    category: 'Technical',
-    department: 'Electronics & Communication',
-    organizer: 'AI & Robotics Club',
-    date: '2026-09-28',
-    time: '10:00 AM - 04:00 PM',
-    venue: 'Indoor Sports Complex',
-    totalSeats: 100,
-    availableSeats: 100,
-    status: 'pending',
-    attendees: 0,
-    description: 'Build and battle combat robots in custom arenas with obstacle racing.'
-  },
-  {
-    id: 6,
-    title: 'Unofficial Campus Night Rave',
-    category: 'Cultural',
-    department: 'All Departments',
-    organizer: 'Gaming & eSports Syndicate',
-    date: '2026-08-30',
-    time: '11:00 PM - 04:00 AM',
-    venue: 'Off-Campus Ground',
-    totalSeats: 200,
-    availableSeats: 200,
-    status: 'rejected',
-    attendees: 0,
-    description: 'Night party without campus safety permits.'
-  }
-];
-
-let serviceProviders = [
-  {
-    id: 1,
-    name: 'Campus Bites & Caterers',
-    category: 'Catering',
-    contactPerson: 'Ramesh Gupta',
-    email: 'contact@campusbites.com',
-    phone: '+91 98765 43210',
-    rating: 4.8,
-    status: 'Approved',
-    eventsServed: 18,
-    services: 'Buffet, High Tea, Snacks, Packed Meals'
-  },
-  {
-    id: 2,
-    name: 'Grand Royal Hotel & Suites',
-    category: 'Hotel & Hospitality',
-    contactPerson: 'Meera Deshmukh',
-    email: 'reservations@grandroyal.com',
-    phone: '+91 98234 56789',
-    rating: 4.9,
-    status: 'Approved',
-    eventsServed: 6,
-    services: 'VIP Guest Accommodation, Boardrooms'
-  },
-  {
-    id: 3,
-    name: 'Apex Sound & Light Productions',
-    category: 'Sound & Lighting',
-    contactPerson: 'Sanjay Rawat',
-    email: 'info@apexsound.in',
-    phone: '+91 91234 56780',
-    rating: 4.7,
-    status: 'Approved',
-    eventsServed: 24,
-    services: 'Stage Lighting, Line Array Audio, Trussing'
-  },
-  {
-    id: 4,
-    name: 'Shree Balaji Tent & Decorators',
-    category: 'Tent & Staging',
-    contactPerson: 'Rajesh Sharma',
-    email: 'balajitents@gmail.com',
-    phone: '+91 94567 89012',
-    rating: 4.5,
-    status: 'Pending',
-    eventsServed: 0,
-    services: 'Waterproof Pandals, Canopies, Seating'
-  },
-  {
-    id: 5,
-    name: 'Vivid Memories Photography',
-    category: 'Photography & Media',
-    contactPerson: 'Tanmay Jain',
-    email: 'tanmay@vividmemories.com',
-    phone: '+91 99887 76655',
-    rating: 4.6,
-    status: 'Pending',
-    eventsServed: 0,
-    services: '4K Event Videography, Drone Shots, Live Stream'
-  },
-  {
-    id: 6,
-    name: 'Unverified Event Security Staff',
-    category: 'Security & Bouncers',
-    contactPerson: 'Karan B.',
-    email: 'karan@security.net',
-    phone: '+91 90000 11122',
-    rating: 3.2,
-    status: 'Rejected',
-    eventsServed: 0,
-    services: 'Crowd control without government license'
-  }
-];
-
-let applications = [
-  {
-    id: 101,
-    eventId: 1,
-    eventTitle: 'HackHive 2026: Annual Campus Hackathon',
-    providerId: 1,
-    providerName: 'Campus Bites & Caterers',
-    category: 'Catering',
-    proposal: 'Provide 24-hr midnight snacks, energy drinks, breakfast and lunch for 150 hackathon participants.',
-    estimatedCost: '₹45,000',
-    status: 'Accepted',
-    appliedDate: '2026-08-15'
-  },
-  {
-    id: 102,
-    eventId: 3,
-    eventTitle: 'Rhythm & Beats: Inter-College Cultural Fest',
-    providerId: 3,
-    providerName: 'Apex Sound & Light Productions',
-    category: 'Sound & Lighting',
-    proposal: 'Full stage concert audio setup, laser show, and 30,000-watt sound reinforcement.',
-    estimatedCost: '₹85,000',
-    status: 'Accepted',
-    appliedDate: '2026-08-18'
-  },
-  {
-    id: 103,
-    eventId: 4,
-    eventTitle: 'Startup Pitch Night & Investor Meet',
-    providerId: 2,
-    providerName: 'Grand Royal Hotel & Suites',
-    category: 'Hotel & Hospitality',
-    proposal: 'Accommodation for 8 venture capital judges and banquet high-tea setup.',
-    estimatedCost: '₹32,000',
-    status: 'Pending',
-    appliedDate: '2026-08-20'
-  },
-  {
-    id: 104,
-    eventId: 5,
-    eventTitle: 'RoboWars & Combat Arena Tournament',
-    providerId: 4,
-    providerName: 'Shree Balaji Tent & Decorators',
-    category: 'Tent & Staging',
-    proposal: 'High-durability arena barricading and spectator bleachers.',
-    estimatedCost: '₹28,000',
-    status: 'Pending',
-    appliedDate: '2026-08-21'
-  },
-  {
-    id: 105,
-    eventId: 2,
-    eventTitle: 'AI & Deep Learning Hands-on Workshop',
-    providerId: 5,
-    providerName: 'Vivid Memories Photography',
-    category: 'Photography & Media',
-    proposal: 'Full event recording and certificate photo shoot.',
-    estimatedCost: '₹12,000',
-    status: 'Rejected',
-    appliedDate: '2026-08-19'
-  }
-];
-
-let notifications = [
-  {
-    id: 1,
-    type: 'event_request',
-    title: 'New Event Approval Request',
-    message: 'E-Cell submitted "Startup Pitch Night & Investor Meet" for administrative review.',
-    timestamp: '2026-08-22 14:30',
-    read: false,
-    link: '/admin/events'
-  },
-  {
-    id: 2,
-    type: 'organizer_request',
-    title: 'New Organizer Registration',
-    message: 'Neha Malhotra requested organizer verification for Debate & Literary Society.',
-    timestamp: '2026-08-21 11:15',
-    read: false,
-    link: '/admin/organizers'
-  },
-  {
-    id: 3,
-    type: 'provider_application',
-    title: 'Service Provider Application',
-    message: 'Grand Royal Hotel applied for Startup Pitch Night hospitality services.',
-    timestamp: '2026-08-20 16:45',
-    read: false,
-    link: '/admin/applications'
-  },
-  {
-    id: 4,
-    type: 'system',
-    title: 'System Health & Backup Completed',
-    message: 'Nightly database snapshot and audit log backup completed successfully.',
-    timestamp: '2026-08-20 02:00',
-    read: true,
-    link: '/admin/dashboard'
-  }
-];
-
-// --- Exported Async Helper Functions ---
-
-// 1. Dashboard Stats
+// 1. Dashboard Stats for HOD
 async function getDashboardStats() {
-  const pendingEvts = events.filter(e => e.status === 'pending').length;
-  const pendingOrgs = organizers.filter(o => o.status === 'Pending').length;
-  const pendingProvs = serviceProviders.filter(p => p.status === 'Pending').length;
-  const pendingApps = applications.filter(a => a.status === 'Pending').length;
+  const allEvents = store.events;
+  const hodPending = allEvents.filter(e => e.status === 'HOD_REVIEW');
+  const hostPending = allEvents.filter(e => e.status === 'HOST_REVIEW');
+  const studentPending = allEvents.filter(e => e.status === 'SUBMITTED');
+  const changesPending = allEvents.filter(e => e.status === 'CHANGES_REQUESTED');
+  const approvedEvents = allEvents.filter(e => ['APPROVED', 'PUBLISHED', 'Published'].includes(e.status));
+
+  // Detect conflicts across all pending requests
+  let conflictAlertsCount = 0;
+  for (const evt of allEvents) {
+    if (['HOD_REVIEW', 'HOST_REVIEW', 'SUBMITTED'].includes(evt.status)) {
+      const check = store.checkConflict(evt, evt._id);
+      if (check.hasConflict) conflictAlertsCount++;
+    }
+  }
+
+  const students = store.users.filter(u => u.role === 'student');
+  const coordinators = store.users.filter(u => u.role === 'organizer');
+  const hosts = store.hosts;
 
   return {
-    totalUsers: users.length * 250, // Scaled for realistic campus representation
-    totalOrganizers: organizers.length,
-    totalEvents: events.length,
-    pendingApprovals: pendingEvts + pendingOrgs + pendingProvs,
-    serviceProviders: serviceProviders.length,
-    pendingApplications: pendingApps,
-    activeEvents: events.filter(e => e.status === 'approved').length
+    collegeName: store.collegeName,
+    totalUsers: store.users.length * 50,
+    totalStudents: students.length * 150,
+    totalOrganizers: coordinators.length,
+    totalCoordinators: coordinators.length,
+    totalHosts: hosts.length,
+    totalEvents: allEvents.length,
+    pendingHODApprovals: hodPending.length,
+    pendingHostReviews: hostPending.length,
+    pendingCoordinatorReviews: studentPending.length,
+    changesRequestedCount: changesPending.length,
+    pendingApprovals: hodPending.length + hostPending.length + studentPending.length,
+    approvedEvents: approvedEvents.length,
+    publicEvents: allEvents.filter(e => e.visibility === 'PUBLIC').length,
+    collegeOnlyEvents: allEvents.filter(e => e.visibility === 'COLLEGE_ONLY').length,
+    conflictAlertsCount,
+    totalRegistrations: store.registrations.length,
+    serviceProviders: 6,
+    pendingApplications: 2
   };
 }
 
 // 2. Recent Events
 async function getRecentEvents() {
-  return events.slice(0, 5);
+  return store.events.slice(0, 8);
 }
 
-// 3. Pending Approvals list for dashboard
+// 3. Pending Approvals list for HOD Dashboard
 async function getPendingApprovals() {
   const list = [];
 
-  events.filter(e => e.status === 'pending').forEach(e => {
+  store.events.filter(e => ['HOD_REVIEW', 'HOST_REVIEW', 'SUBMITTED', 'CHANGES_REQUESTED'].includes(e.status)).forEach(e => {
+    const conflictCheck = store.checkConflict(e, e._id);
     list.push({
-      id: e.id,
+      id: e._id || e.id,
       type: 'event',
       title: e.title,
-      requestedBy: e.organizer,
-      requestedDate: e.date,
-      description: e.description
-    });
-  });
-
-  organizers.filter(o => o.status === 'Pending').forEach(o => {
-    list.push({
-      id: o.id,
-      type: 'organizer',
-      title: `${o.name} (Lead: ${o.leadName})`,
-      requestedBy: o.email,
-      requestedDate: '2026-08-20',
-      description: o.description
-    });
-  });
-
-  serviceProviders.filter(p => p.status === 'Pending').forEach(p => {
-    list.push({
-      id: p.id,
-      type: 'service_provider',
-      title: `${p.name} (${p.category})`,
-      requestedBy: p.contactPerson,
-      requestedDate: '2026-08-21',
-      description: p.services
+      category: e.category,
+      department: e.department,
+      venue: e.venue,
+      date: e.date,
+      time: `${e.startTime || '10:00'} - ${e.endTime || '16:00'}`,
+      visibility: e.visibility,
+      registrationAccess: e.registrationAccess || 'COLLEGE_STUDENTS_ONLY',
+      status: e.status,
+      hostName: e.hostName || 'Pending Assignment',
+      hostDepartment: e.hostDepartment || 'Faculty',
+      coordinatorName: e.coordinatorName || e.organizerName || 'Student Club',
+      requestedBy: e.requestedByStudentName || e.organizerName || 'Student',
+      requestedDate: e.createdAt ? e.createdAt.split('T')[0] : '2026-08-20',
+      description: e.description,
+      approvalHistory: e.approvalHistory || [],
+      hasConflict: conflictCheck.hasConflict,
+      conflictMessage: conflictCheck.hasConflict ? conflictCheck.conflicts[0].message : null,
+      conflicts: conflictCheck.conflicts
     });
   });
 
   return list;
 }
 
-// 4. Users CRUD
+// 4. Conflicts list for HOD Review
+async function getConflictAlerts() {
+  const conflictsList = [];
+  for (const evt of store.events) {
+    if (!['CANCELLED', 'Cancelled', 'REJECTED', 'HOD_REJECTED', 'HOST_REJECTED'].includes(evt.status)) {
+      const check = store.checkConflict(evt, evt._id);
+      if (check.hasConflict) {
+        conflictsList.push({
+          event: evt,
+          conflicts: check.conflicts
+        });
+      }
+    }
+  }
+  return conflictsList;
+}
+
+// 5. Venue Occupancy Schedules
+async function getVenueSchedules() {
+  const schedules = {};
+  for (const venue of require('../../backend/models/store').COLLEGE_VENUES) {
+    schedules[venue] = store.events.filter(e =>
+      e.venue === venue && !['CANCELLED', 'Cancelled', 'REJECTED', 'HOD_REJECTED', 'HOST_REJECTED'].includes(e.status)
+    );
+  }
+  return schedules;
+}
+
+// 6. Users CRUD
 async function getAllUsers(query = {}) {
-  let result = [...users];
+  let result = [...store.users];
   if (query.search) {
     const q = query.search.toLowerCase();
     result = result.filter(u =>
       u.name.toLowerCase().includes(q) ||
       u.email.toLowerCase().includes(q) ||
       (u.rollNumber && u.rollNumber.toLowerCase().includes(q)) ||
-      u.department.toLowerCase().includes(q)
+      (u.department && u.department.toLowerCase().includes(q))
     );
   }
   if (query.role && query.role !== 'All') {
     result = result.filter(u => u.role.toLowerCase() === query.role.toLowerCase());
   }
-  if (query.status && query.status !== 'All') {
-    result = result.filter(u => u.status.toLowerCase() === query.status.toLowerCase());
-  }
   return result;
 }
 
-async function getUserById(id) {
-  return users.find(u => u.id === parseInt(id)) || null;
-}
-
 async function toggleUserStatus(id) {
-  const user = users.find(u => u.id === parseInt(id));
+  const user = store.findUserById(id);
   if (user) {
     user.status = user.status === 'Active' ? 'Inactive' : 'Active';
     return user;
@@ -531,206 +145,280 @@ async function toggleUserStatus(id) {
 }
 
 async function deleteUser(id) {
-  const idx = users.findIndex(u => u.id === parseInt(id));
+  const idx = store.users.findIndex(u => u._id === id || u.id === id);
   if (idx !== -1) {
-    const deleted = users.splice(idx, 1)[0];
-    return deleted;
+    return store.users.splice(idx, 1)[0];
   }
   return null;
 }
 
-// 5. Organizers CRUD
+// 7. Organizers / Coordinators
 async function getAllOrganizers(query = {}) {
-  let result = [...organizers];
-  if (query.search) {
-    const q = query.search.toLowerCase();
-    result = result.filter(o =>
-      o.name.toLowerCase().includes(q) ||
-      o.leadName.toLowerCase().includes(q) ||
-      o.email.toLowerCase().includes(q) ||
-      o.department.toLowerCase().includes(q)
-    );
-  }
-  if (query.status && query.status !== 'All') {
-    result = result.filter(o => o.status.toLowerCase() === query.status.toLowerCase());
-  }
-  return result;
+  return store.users.filter(u => u.role === 'organizer' || u.role === 'coordinator');
 }
 
-async function updateOrganizerStatus(id, status) {
-  const org = organizers.find(o => o.id === parseInt(id));
-  if (org) {
-    org.status = status;
-    if (status === 'Approved') {
-      org.verificationDate = new Date().toISOString().split('T')[0];
-    }
-    return org;
-  }
-  return null;
+// 8. Event Hosts / Teachers
+async function getAllHosts() {
+  return store.hosts;
 }
 
-// 6. Events CRUD
+// 9. Events CRUD & HOD Final Approvals
 async function getAllEvents(query = {}) {
-  let result = [...events];
+  let result = [...store.events];
   if (query.search) {
     const q = query.search.toLowerCase();
     result = result.filter(e =>
       e.title.toLowerCase().includes(q) ||
-      e.organizer.toLowerCase().includes(q) ||
-      e.venue.toLowerCase().includes(q) ||
-      e.department.toLowerCase().includes(q)
+      (e.organizerName && e.organizerName.toLowerCase().includes(q)) ||
+      (e.venue && e.venue.toLowerCase().includes(q)) ||
+      (e.department && e.department.toLowerCase().includes(q))
     );
   }
   if (query.status && query.status !== 'All') {
     result = result.filter(e => e.status.toLowerCase() === query.status.toLowerCase());
   }
-  if (query.category && query.category !== 'All') {
-    result = result.filter(e => e.category.toLowerCase() === query.category.toLowerCase());
+  if (query.visibility && query.visibility !== 'All') {
+    result = result.filter(e => e.visibility === query.visibility);
   }
-  return result;
+  if (query.category && query.category !== 'All') {
+    result = result.filter(e => e.category && e.category.toLowerCase() === query.category.toLowerCase());
+  }
+
+  return result.map(e => {
+    const conflictCheck = store.checkConflict(e, e._id);
+    return {
+      ...e,
+      hasConflict: conflictCheck.hasConflict,
+      conflicts: conflictCheck.conflicts
+    };
+  });
 }
 
-async function updateEventStatus(id, status) {
-  const evt = events.find(e => e.id === parseInt(id));
-  if (evt) {
-    evt.status = status;
-    return evt;
+// HOD Final Approval
+async function hodApproveEvent(id, { remarks, conflictOverride, overrideReason }) {
+  const event = store.findEventById(id);
+  if (!event) return null;
+
+  // Check conflict
+  const conflictCheck = store.checkConflict(event, event._id);
+  if (conflictCheck.hasConflict && !conflictOverride) {
+    return {
+      error: true,
+      hasConflict: true,
+      conflicts: conflictCheck.conflicts,
+      message: `Schedule Conflict Detected: ${conflictCheck.conflicts[0].message}`
+    };
   }
-  return null;
+
+  const updated = store.updateEvent(id, {
+    status: 'PUBLISHED', // Officially Approved & Published
+    hodApprovedBy: 'Dr. Arthur Pendelton (HOD / Admin)',
+    hodApprovedAt: new Date().toISOString(),
+    hodRemarks: remarks || 'Approved for campus execution.',
+    conflictOverride: Boolean(conflictOverride),
+    overrideReason: overrideReason || null,
+    historyEntry: {
+      actor: 'Dr. Arthur Pendelton',
+      role: 'HOD / Admin',
+      action: conflictOverride ? 'HOD_APPROVED_WITH_OVERRIDE' : 'HOD_APPROVED',
+      comment: conflictOverride
+        ? `HOD approved despite schedule conflict. Reason: ${overrideReason}`
+        : (remarks || 'HOD final approval granted. Event published.')
+    }
+  });
+
+  store.addAuditLog({
+    actorId: 'hod_001',
+    actorName: 'Dr. Arthur Pendelton',
+    actorRole: 'HOD / Admin',
+    action: conflictOverride ? 'HOD_APPROVED_WITH_OVERRIDE' : 'HOD_APPROVED',
+    targetId: updated._id,
+    targetTitle: updated.title,
+    remarks: conflictOverride
+      ? `HOD approved despite schedule conflict. Override Reason: ${overrideReason}`
+      : (remarks || 'HOD final approval granted. Event published.')
+  });
+
+  if (updated.requestedByStudentId || updated.coordinatorId) {
+    store.addNotification({
+      userId: updated.requestedByStudentId || updated.coordinatorId,
+      title: '🎉 Event Officially Approved by HOD!',
+      message: `Your event proposal '${updated.title}' has received final HOD approval and is now published for registrations.`,
+      link: '/student/my-events'
+    });
+  }
+
+  return updated;
+}
+
+// HOD Rejection
+async function hodRejectEvent(id, { remarks }) {
+  const event = store.findEventById(id);
+  if (!event) return null;
+
+  const rejectionReason = remarks || 'Administrative decision by HOD.';
+
+  const updated = store.updateEvent(id, {
+    status: 'HOD_REJECTED',
+    hodRemarks: rejectionReason,
+    historyEntry: {
+      actor: 'Dr. Arthur Pendelton',
+      role: 'HOD / Admin',
+      action: 'HOD_REJECTED',
+      comment: rejectionReason
+    }
+  });
+
+  store.addAuditLog({
+    actorId: 'hod_001',
+    actorName: 'Dr. Arthur Pendelton',
+    actorRole: 'HOD / Admin',
+    action: 'HOD_REJECTED',
+    targetId: updated._id,
+    targetTitle: updated.title,
+    remarks: rejectionReason
+  });
+
+  if (updated.requestedByStudentId || updated.coordinatorId) {
+    store.addNotification({
+      userId: updated.requestedByStudentId || updated.coordinatorId,
+      title: 'Event Proposal Rejected by HOD',
+      message: `Your event '${updated.title}' was rejected during HOD final review. Reason: ${rejectionReason}`,
+      link: '/coordinator/requests'
+    });
+  }
+
+  return updated;
+}
+
+// HOD Requests Changes
+async function hodRequestChanges(id, { remarks }) {
+  const event = store.findEventById(id);
+  if (!event) return null;
+
+  const feedback = remarks || 'Please adjust schedule/capacity as requested.';
+
+  const updated = store.updateEvent(id, {
+    status: 'CHANGES_REQUESTED',
+    hodRemarks: feedback,
+    historyEntry: {
+      actor: 'Dr. Arthur Pendelton',
+      role: 'HOD / Admin',
+      action: 'CHANGES_REQUESTED',
+      comment: feedback
+    }
+  });
+
+  store.addAuditLog({
+    actorId: 'hod_001',
+    actorName: 'Dr. Arthur Pendelton',
+    actorRole: 'HOD / Admin',
+    action: 'HOD_CHANGES_REQUESTED',
+    targetId: updated._id,
+    targetTitle: updated.title,
+    remarks: feedback
+  });
+
+  if (updated.requestedByStudentId || updated.coordinatorId) {
+    store.addNotification({
+      userId: updated.requestedByStudentId || updated.coordinatorId,
+      title: 'HOD Requested Changes for Event Proposal',
+      message: `HOD requested adjustments on '${updated.title}': ${feedback}`,
+      link: '/coordinator/requests'
+    });
+  }
+
+  return updated;
 }
 
 async function deleteEvent(id) {
-  const idx = events.findIndex(e => e.id === parseInt(id));
-  if (idx !== -1) {
-    return events.splice(idx, 1)[0];
-  }
-  return null;
+  return store.deleteEvent(id);
 }
 
-// 7. Service Providers CRUD
-async function getAllProviders(query = {}) {
-  let result = [...serviceProviders];
-  if (query.search) {
-    const q = query.search.toLowerCase();
-    result = result.filter(p =>
-      p.name.toLowerCase().includes(q) ||
-      p.contactPerson.toLowerCase().includes(q) ||
-      p.email.toLowerCase().includes(q) ||
-      p.category.toLowerCase().includes(q)
-    );
-  }
-  if (query.category && query.category !== 'All') {
-    result = result.filter(p => p.category.toLowerCase() === query.category.toLowerCase());
-  }
-  if (query.status && query.status !== 'All') {
-    result = result.filter(p => p.status.toLowerCase() === query.status.toLowerCase());
-  }
-  return result;
+// 10. Audit Logs
+async function getAuditLogs() {
+  return store.auditLogs;
 }
 
-async function updateProviderStatus(id, status) {
-  const prov = serviceProviders.find(p => p.id === parseInt(id));
-  if (prov) {
-    prov.status = status;
-    return prov;
-  }
-  return null;
-}
-
-// 8. Applications CRUD
-async function getAllApplications(query = {}) {
-  let result = [...applications];
-  if (query.search) {
-    const q = query.search.toLowerCase();
-    result = result.filter(a =>
-      a.eventTitle.toLowerCase().includes(q) ||
-      a.providerName.toLowerCase().includes(q) ||
-      a.category.toLowerCase().includes(q) ||
-      a.proposal.toLowerCase().includes(q)
-    );
-  }
-  if (query.status && query.status !== 'All') {
-    result = result.filter(a => a.status.toLowerCase() === query.status.toLowerCase());
-  }
-  if (query.eventId && query.eventId !== 'All') {
-    result = result.filter(a => a.eventId === parseInt(query.eventId));
-  }
-  return result;
-}
-
-async function updateApplicationStatus(id, status) {
-  const app = applications.find(a => a.id === parseInt(id));
-  if (app) {
-    app.status = status;
-    return app;
-  }
-  return null;
-}
-
-// 9. Notifications CRUD
+// 11. Notifications
 async function getNotifications() {
-  return [...notifications];
+  return store.notifications;
 }
 
 async function markAllNotificationsRead() {
-  notifications = notifications.map(n => ({ ...n, read: true }));
+  store.notifications.forEach(n => { n.read = true; });
   return true;
 }
 
-async function markNotificationRead(id) {
-  const notif = notifications.find(n => n.id === parseInt(id));
-  if (notif) {
-    notif.read = true;
-    return notif;
-  }
-  return null;
+// 12. Service Providers & Applications (Preserved)
+let serviceProviders = [
+  { id: 1, name: 'Campus Bites & Caterers', category: 'Catering', contactPerson: 'Ramesh Gupta', email: 'contact@campusbites.com', phone: '+91 98765 43210', rating: 4.8, status: 'Approved', eventsServed: 18, services: 'Buffet, High Tea, Snacks' },
+  { id: 2, name: 'Grand Royal Hotel & Suites', category: 'Hotel & Hospitality', contactPerson: 'Meera Deshmukh', email: 'reservations@grandroyal.com', phone: '+91 98234 56789', rating: 4.9, status: 'Approved', eventsServed: 6, services: 'VIP Guest Accommodation' },
+  { id: 3, name: 'Apex Sound & Light Productions', category: 'Sound & Lighting', contactPerson: 'Sanjay Rawat', email: 'info@apexsound.in', phone: '+91 91234 56780', rating: 4.7, status: 'Approved', eventsServed: 24, services: 'Stage Lighting, Line Array Audio' },
+  { id: 4, name: 'Shree Balaji Tent & Decorators', category: 'Tent & Staging', contactPerson: 'Rajesh Sharma', email: 'balajitents@gmail.com', phone: '+91 94567 89012', rating: 4.5, status: 'Pending', eventsServed: 0, services: 'Waterproof Pandals, Canopies' }
+];
+
+let applications = [
+  { id: 101, eventId: 'evt_101', eventTitle: 'HackHive 2026: Annual Campus Hackathon', providerId: 1, providerName: 'Campus Bites & Caterers', category: 'Catering', proposal: '24-hr midnight snacks and breakfast for 150 hackathon participants.', estimatedCost: '₹45,000', status: 'Accepted', appliedDate: '2026-08-15' },
+  { id: 102, eventId: 'evt_103', eventTitle: 'Rhythm & Beats: Inter-College Cultural Fest', providerId: 3, providerName: 'Apex Sound & Light Productions', category: 'Sound & Lighting', proposal: 'Full stage concert audio setup and laser show.', estimatedCost: '₹85,000', status: 'Accepted', appliedDate: '2026-08-18' }
+];
+
+async function getAllProviders() { return serviceProviders; }
+async function updateProviderStatus(id, status) {
+  const p = serviceProviders.find(p => p.id === parseInt(id));
+  if (p) p.status = status;
+  return p;
+}
+async function getAllApplications() { return applications; }
+async function updateApplicationStatus(id, status) {
+  const a = applications.find(a => a.id === parseInt(id));
+  if (a) a.status = status;
+  return a;
 }
 
-// 10. Reports & Analytics
+// 13. Reports
 async function getAdminReports() {
-  const totalUsersCount = users.length * 250;
-  const activeEventsCount = events.filter(e => e.status === 'approved').length;
-  const pendingEventsCount = events.filter(e => e.status === 'pending').length;
-  const rejectedEventsCount = events.filter(e => e.status === 'rejected').length;
-
-  const categoryBreakdown = [
-    { category: 'Technical', count: 18, percentage: 40 },
-    { category: 'Cultural', count: 12, percentage: 27 },
-    { category: 'Workshops', count: 8, percentage: 18 },
-    { category: 'Seminars', count: 4, percentage: 9 },
-    { category: 'Sports', count: 3, percentage: 6 }
-  ];
-
-  const monthlyTrend = [
-    { month: 'May 2026', events: 14, attendance: 2100, applications: 8 },
-    { month: 'Jun 2026', events: 19, attendance: 3400, applications: 12 },
-    { month: 'Jul 2026', events: 24, attendance: 4800, applications: 18 },
-    { month: 'Aug 2026', events: 32, attendance: 6500, applications: 25 }
-  ];
-
-  const departmentParticipation = [
-    { dept: 'Computer Science & Engineering', events: 15, students: 680 },
-    { dept: 'Electronics & Communication', events: 10, students: 420 },
-    { dept: 'Mechanical Engineering', events: 6, students: 260 },
-    { dept: 'Management Studies', events: 8, students: 310 },
-    { dept: 'Biotechnology', events: 4, students: 180 }
-  ];
+  const allEvents = store.events;
+  const approved = allEvents.filter(e => ['APPROVED', 'PUBLISHED', 'Published'].includes(e.status)).length;
+  const pending = allEvents.filter(e => ['HOD_REVIEW', 'HOST_REVIEW', 'SUBMITTED'].includes(e.status)).length;
+  const rejected = allEvents.filter(e => ['REJECTED', 'HOST_REJECTED', 'HOD_REJECTED'].includes(e.status)).length;
 
   return {
+    collegeName: store.collegeName,
     overview: {
-      totalUsers: totalUsersCount,
-      totalOrganizers: organizers.length,
+      totalUsers: store.users.length * 50,
+      totalStudents: store.users.filter(u => u.role === 'student').length * 150,
+      totalOrganizers: store.users.filter(u => u.role === 'organizer').length,
+      totalHosts: store.hosts.length,
       totalProviders: serviceProviders.length,
-      totalEvents: events.length,
-      approvedEvents: activeEventsCount,
-      pendingEvents: pendingEventsCount,
-      rejectedEvents: rejectedEventsCount,
+      totalEvents: allEvents.length,
+      approvedEvents: approved,
+      pendingEvents: pending,
+      rejectedEvents: rejected,
+      publicEvents: allEvents.filter(e => e.visibility === 'PUBLIC').length,
+      collegeOnlyEvents: allEvents.filter(e => e.visibility === 'COLLEGE_ONLY').length,
       totalApplications: applications.length,
       acceptedApplications: applications.filter(a => a.status === 'Accepted').length
     },
-    categoryBreakdown,
-    monthlyTrend,
-    departmentParticipation
+    categoryBreakdown: [
+      { category: 'Technical', count: 18, percentage: 40 },
+      { category: 'Cultural', count: 12, percentage: 27 },
+      { category: 'Workshops', count: 8, percentage: 18 },
+      { category: 'Seminars', count: 4, percentage: 9 },
+      { category: 'Sports', count: 3, percentage: 6 }
+    ],
+    monthlyTrend: [
+      { month: 'Jun 2026', events: 12, attendance: 2400, applications: 8 },
+      { month: 'Jul 2026', events: 18, attendance: 4200, applications: 14 },
+      { month: 'Aug 2026', events: 25, attendance: 6100, applications: 20 }
+    ],
+    departmentParticipation: [
+      { dept: 'Computer Science & Engineering', events: 15, students: 680 },
+      { dept: 'Electronics & Communication', events: 10, students: 420 },
+      { dept: 'Mechanical Engineering', events: 6, students: 260 },
+      { dept: 'Management Studies', events: 8, students: 310 },
+      { dept: 'Civil Engineering', events: 4, students: 180 }
+    ]
   };
 }
 
@@ -738,14 +426,17 @@ module.exports = {
   getDashboardStats,
   getRecentEvents,
   getPendingApprovals,
+  getConflictAlerts,
+  getVenueSchedules,
   getAllUsers,
-  getUserById,
   toggleUserStatus,
   deleteUser,
   getAllOrganizers,
-  updateOrganizerStatus,
+  getAllHosts,
   getAllEvents,
-  updateEventStatus,
+  hodApproveEvent,
+  hodRejectEvent,
+  hodRequestChanges,
   deleteEvent,
   getAllProviders,
   updateProviderStatus,
@@ -753,6 +444,6 @@ module.exports = {
   updateApplicationStatus,
   getNotifications,
   markAllNotificationsRead,
-  markNotificationRead,
-  getAdminReports
+  getAdminReports,
+  getAuditLogs
 };

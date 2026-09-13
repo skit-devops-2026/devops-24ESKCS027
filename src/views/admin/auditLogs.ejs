@@ -1,0 +1,48 @@
+<!-- System Audit Logs Page -->
+<div class="page-container">
+
+  <div class="toolbar-card" style="display: flex; justify-content: space-between; align-items: center;">
+    <div>
+      <h2 style="font-size: 16px; font-weight: 700; color: #0f172a;">Event Governance Audit Trail</h2>
+      <p style="font-size: 13px; color: var(--color-text-light); margin-top: 2px;">Immutable record of student submissions, coordinator assignments, host reviews, and HOD approvals.</p>
+    </div>
+  </div>
+
+  <section class="dashboard-section">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Log ID</th>
+            <th>Timestamp</th>
+            <th>Actor</th>
+            <th>Role</th>
+            <th>Action</th>
+            <th>Event / Target</th>
+            <th>Remarks / Governance Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% (logs || []).forEach(function(log) { %>
+            <tr>
+              <td><code><%= log.id %></code></td>
+              <td><code><%= log.timestamp %></code></td>
+              <td><strong><%= log.actorName %></strong></td>
+              <td>
+                <span class="badge badge--<%= (log.actorRole || '').toLowerCase().includes('student') ? 'student' : (log.actorRole || '').toLowerCase().includes('host') ? 'workshop' : 'organizer' %>">
+                  <%= log.actorRole %>
+                </span>
+              </td>
+              <td>
+                <strong style="color: #4338ca;"><%= log.action %></strong>
+              </td>
+              <td><strong><%= log.targetTitle %></strong></td>
+              <td><span style="font-size: 12px; color: var(--color-text);"><%= log.remarks %></span></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>

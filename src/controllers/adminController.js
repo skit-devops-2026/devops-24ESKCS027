@@ -11,11 +11,12 @@ async function renderAdminView(res, viewRelativePath, data = {}, layoutOptions =
   try {
     const notifications = await mockData.getNotifications();
     const unreadCount = notifications.filter(n => !n.read).length;
+    const stats = await mockData.getDashboardStats();
 
     const content = await new Promise((resolve, reject) => {
       ejs.renderFile(
         path.join(viewsDir, viewRelativePath),
-        { ...data, unreadCount },
+        { ...data, unreadCount, dashboardStats: stats },
         (err, str) => {
           if (err) return reject(err);
           resolve(str);
@@ -28,7 +29,11 @@ async function renderAdminView(res, viewRelativePath, data = {}, layoutOptions =
       activePage: layoutOptions.activePage || 'dashboard',
       unreadCount,
       alert: layoutOptions.alert || null,
-      adminUser: res.locals.adminUser || { name: 'Administrator', email: 'admin@eventhive.com' },
+      adminUser: res.locals.adminUser || {
+        name: 'Dr. Arthur Pendelton',
+        email: 'admin@eventhive.com',
+        role: 'HOD / Admin'
+      },
       content
     });
   } catch (err) {
@@ -60,7 +65,6 @@ function postLogin(req, res) {
   }
 
   if (email.trim().toLowerCase() === adminEmail.toLowerCase() && password === adminPass) {
-    // Set cookie for session authentication
     res.cookie('eh_admin_session', 'authenticated_admin_session_token', {
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000 // 24 hours
@@ -69,7 +73,7 @@ function postLogin(req, res) {
   }
 
   return res.render('admin/login', {
-    error: 'Invalid administrator email or password.',
+    error: 'Invalid administrator / HOD email or password.',
     message: null
   });
 }
@@ -80,22 +84,23 @@ function logout(req, res) {
 }
 
 // =========================================================================
-// 2. DASHBOARD
+// 2. HOD DASHBOARD
 // =========================================================================
 
 async function getDashboard(req, res) {
   try {
-    const [stats, recentEvents, pendingApprovals] = await Promise.all([
+    const [stats, recentEvents, pendingApprovals, auditLogs] = await Promise.all([
       mockData.getDashboardStats(),
       mockData.getRecentEvents(),
-      mockData.getPendingApprovals()
+      mockData.getPendingApprovals(),
+      mockData.getAuditLogs()
     ]);
 
     await renderAdminView(
       res,
       'admin/dashboard.ejs',
-      { stats, recentEvents, pendingApprovals },
-      { pageTitle: 'Dashboard', activePage: 'dashboard' }
+      { stats, recentEvents, pendingApprovals, auditLogs },
+      { pageTitle: 'HOD Approval Dashboard', activePage: 'dashboard' }
     );
   } catch (err) {
     console.error('getDashboard error:', err);
@@ -117,17 +122,12 @@ async function getUsers(req, res) {
       'admin/users.ejs',
       {
         users,
-        filters: {
-          search: search || '',
-          role: role || 'All',
-          status: status || 'All'
-        },
+        filters: { search: search || '', role: role || 'All', status: status || 'All' },
         alert: req.query.alert || null
       },
-      { pageTitle: 'User Management', activePage: 'users' }
+      { pageTitle: 'College Users Directory', activePage: 'users' }
     );
   } catch (err) {
-    console.error('getUsers error:', err);
     res.status(500).send('Error loading users');
   }
 }
@@ -135,17 +135,17 @@ async function getUsers(req, res) {
 async function postToggleUserStatus(req, res) {
   try {
     const user = await mockData.toggleUserStatus(req.params.id);
-    const msg = user ? `User ${user.name} is now ${user.status}.` : 'User not found.';
+    const msg = user ? `User ${user.name} status updated.` : 'User not found.';
     res.redirect('/admin/users?alert=' + encodeURIComponent(msg));
   } catch (err) {
-    res.redirect('/admin/users?alert=' + encodeURIComponent('Failed to update user status.'));
+    res.redirect('/admin/users?alert=' + encodeURIComponent('Failed to update status.'));
   }
 }
 
 async function postDeleteUser(req, res) {
   try {
     const deleted = await mockData.deleteUser(req.params.id);
-    const msg = deleted ? `User ${deleted.name} deleted successfully.` : 'User not found.';
+    const msg = deleted ? `User deleted successfully.` : 'User not found.';
     res.redirect('/admin/users?alert=' + encodeURIComponent(msg));
   } catch (err) {
     res.redirect('/admin/users?alert=' + encodeURIComponent('Failed to delete user.'));
@@ -153,56 +153,31 @@ async function postDeleteUser(req, res) {
 }
 
 // =========================================================================
-// 4. ORGANIZER MANAGEMENT
+// 4. EVENT HOSTS / TEACHERS DIRECTORY
 // =========================================================================
 
-async function getOrganizers(req, res) {
+async function getHosts(req, res) {
   try {
-    const { search, status } = req.query;
-    const organizers = await mockData.getAllOrganizers({ search, status });
-
+    const hosts = await mockData.getAllHosts();
     await renderAdminView(
       res,
-      'admin/organizers.ejs',
-      {
-        organizers,
-        filters: { search: search || '', status: status || 'All' },
-        alert: req.query.alert || null
-      },
-      { pageTitle: 'Organizer Management', activePage: 'organizers' }
+      'admin/hosts.ejs',
+      { hosts, alert: req.query.alert || null },
+      { pageTitle: 'Event Hosts & Faculty Mentors', activePage: 'hosts' }
     );
   } catch (err) {
-    console.error('getOrganizers error:', err);
-    res.status(500).send('Error loading organizers');
-  }
-}
-
-async function postApproveOrganizer(req, res) {
-  try {
-    await mockData.updateOrganizerStatus(req.params.id, 'Approved');
-    res.redirect('/admin/organizers?alert=' + encodeURIComponent('Organizer verified & approved.'));
-  } catch (err) {
-    res.redirect('/admin/organizers?alert=' + encodeURIComponent('Action failed.'));
-  }
-}
-
-async function postRejectOrganizer(req, res) {
-  try {
-    await mockData.updateOrganizerStatus(req.params.id, 'Rejected');
-    res.redirect('/admin/organizers?alert=' + encodeURIComponent('Organizer registration rejected.'));
-  } catch (err) {
-    res.redirect('/admin/organizers?alert=' + encodeURIComponent('Action failed.'));
+    res.status(500).send('Error loading Event Hosts');
   }
 }
 
 // =========================================================================
-// 5. EVENT MANAGEMENT
+// 5. EVENT MANAGEMENT & HOD FINAL APPROVALS
 // =========================================================================
 
 async function getEvents(req, res) {
   try {
-    const { search, status, category } = req.query;
-    const events = await mockData.getAllEvents({ search, status, category });
+    const { search, status, category, visibility } = req.query;
+    const events = await mockData.getAllEvents({ search, status, category, visibility });
 
     await renderAdminView(
       res,
@@ -212,33 +187,69 @@ async function getEvents(req, res) {
         filters: {
           search: search || '',
           status: status || 'All',
-          category: category || 'All'
+          category: category || 'All',
+          visibility: visibility || 'All'
         },
         alert: req.query.alert || null
       },
-      { pageTitle: 'Event Management', activePage: 'events' }
+      { pageTitle: 'Event Pipeline & HOD Approvals', activePage: 'events' }
     );
   } catch (err) {
-    console.error('getEvents error:', err);
     res.status(500).send('Error loading events');
   }
 }
 
-async function postApproveEvent(req, res) {
+// HOD Final Approval
+async function postHodApproveEvent(req, res) {
   try {
-    await mockData.updateEventStatus(req.params.id, 'approved');
-    res.redirect('/admin/events?alert=' + encodeURIComponent('Event approved and published live.'));
+    const { id } = req.params;
+    const { remarks, conflictOverride, overrideReason } = req.body;
+
+    const result = await mockData.hodApproveEvent(id, {
+      remarks,
+      conflictOverride: conflictOverride === 'true' || conflictOverride === true,
+      overrideReason
+    });
+
+    if (result && result.error && result.hasConflict) {
+      return res.redirect('/admin/events?alert=' + encodeURIComponent('⚠️ Schedule Conflict Blocked Approval: ' + result.message));
+    }
+
+    const msg = result
+      ? `Event '${result.title}' officially approved and published for campus registrations!`
+      : 'Event not found.';
+
+    res.redirect('/admin/events?alert=' + encodeURIComponent(msg));
   } catch (err) {
-    res.redirect('/admin/events?alert=' + encodeURIComponent('Approval failed.'));
+    res.redirect('/admin/events?alert=' + encodeURIComponent('HOD Approval Failed.'));
   }
 }
 
-async function postRejectEvent(req, res) {
+// HOD Rejection
+async function postHodRejectEvent(req, res) {
   try {
-    await mockData.updateEventStatus(req.params.id, 'rejected');
-    res.redirect('/admin/events?alert=' + encodeURIComponent('Event rejected.'));
+    const { id } = req.params;
+    const { remarks } = req.body;
+
+    const rejected = await mockData.hodRejectEvent(id, { remarks });
+    const msg = rejected ? `Event '${rejected.title}' rejected by HOD.` : 'Event not found.';
+    res.redirect('/admin/events?alert=' + encodeURIComponent(msg));
   } catch (err) {
-    res.redirect('/admin/events?alert=' + encodeURIComponent('Rejection failed.'));
+    res.redirect('/admin/events?alert=' + encodeURIComponent('Rejection Failed.'));
+  }
+}
+
+// HOD Requests Changes
+async function postHodRequestChanges(req, res) {
+  try {
+    const { id } = req.params;
+    const { remarks } = req.body;
+
+    const result = await mockData.hodRequestChanges(id, { remarks });
+    const msg = result ? `Changes requested for event '${result.title}'. Proposal returned to Coordinator.` : 'Event not found.';
+    res.redirect('/admin/events?alert=' + encodeURIComponent(msg));
+  } catch (err) {
+    res.redirect('/admin/events?alert=' + encodeURIComponent('Request Changes Failed.'));
   }
 }
 
@@ -252,156 +263,113 @@ async function postDeleteEvent(req, res) {
 }
 
 // =========================================================================
-// 6. SERVICE PROVIDER MANAGEMENT
+// 6. CONFLICT ALERTS & VENUE SCHEDULES
 // =========================================================================
+
+async function getConflicts(req, res) {
+  try {
+    const conflicts = await mockData.getConflictAlerts();
+    await renderAdminView(
+      res,
+      'admin/conflicts.ejs',
+      { conflicts, alert: req.query.alert || null },
+      { pageTitle: 'Schedule Conflict Alerts', activePage: 'conflicts' }
+    );
+  } catch (err) {
+    res.status(500).send('Error loading conflict alerts');
+  }
+}
+
+async function getVenues(req, res) {
+  try {
+    const schedules = await mockData.getVenueSchedules();
+    await renderAdminView(
+      res,
+      'admin/venues.ejs',
+      { schedules, alert: req.query.alert || null },
+      { pageTitle: 'Campus Venue Schedules', activePage: 'venues' }
+    );
+  } catch (err) {
+    res.status(500).send('Error loading venue schedules');
+  }
+}
+
+// =========================================================================
+// 7. AUDIT LOGS
+// =========================================================================
+
+async function getAuditLogs(req, res) {
+  try {
+    const logs = await mockData.getAuditLogs();
+    await renderAdminView(
+      res,
+      'admin/auditLogs.ejs',
+      { logs, alert: req.query.alert || null },
+      { pageTitle: 'Event Governance Audit Trail', activePage: 'auditLogs' }
+    );
+  } catch (err) {
+    res.status(500).send('Error loading audit logs');
+  }
+}
+
+// =========================================================================
+// 8. ORGANIZERS, SERVICE PROVIDERS, NOTIFICATIONS & REPORTS
+// =========================================================================
+
+async function getOrganizers(req, res) {
+  const organizers = await mockData.getAllOrganizers(req.query);
+  await renderAdminView(
+    res,
+    'admin/organizers.ejs',
+    { organizers, filters: { search: req.query.search || '', status: req.query.status || 'All' } },
+    { pageTitle: 'Coordinators & Student Clubs', activePage: 'organizers' }
+  );
+}
 
 async function getProviders(req, res) {
-  try {
-    const { search, category, status } = req.query;
-    const providers = await mockData.getAllProviders({ search, category, status });
-
-    await renderAdminView(
-      res,
-      'admin/providers.ejs',
-      {
-        providers,
-        filters: {
-          search: search || '',
-          category: category || 'All',
-          status: status || 'All'
-        },
-        alert: req.query.alert || null
-      },
-      { pageTitle: 'Service Providers', activePage: 'providers' }
-    );
-  } catch (err) {
-    console.error('getProviders error:', err);
-    res.status(500).send('Error loading providers');
-  }
+  const providers = await mockData.getAllProviders();
+  await renderAdminView(
+    res,
+    'admin/providers.ejs',
+    { providers, filters: { search: '', category: 'All', status: 'All' } },
+    { pageTitle: 'Campus Service Providers', activePage: 'providers' }
+  );
 }
-
-async function postApproveProvider(req, res) {
-  try {
-    await mockData.updateProviderStatus(req.params.id, 'Approved');
-    res.redirect('/admin/providers?alert=' + encodeURIComponent('Service Provider approved.'));
-  } catch (err) {
-    res.redirect('/admin/providers?alert=' + encodeURIComponent('Approval failed.'));
-  }
-}
-
-async function postRejectProvider(req, res) {
-  try {
-    await mockData.updateProviderStatus(req.params.id, 'Rejected');
-    res.redirect('/admin/providers?alert=' + encodeURIComponent('Service Provider rejected.'));
-  } catch (err) {
-    res.redirect('/admin/providers?alert=' + encodeURIComponent('Rejection failed.'));
-  }
-}
-
-// =========================================================================
-// 7. EVENT APPLICATIONS MANAGEMENT
-// =========================================================================
 
 async function getApplications(req, res) {
-  try {
-    const { search, status, eventId } = req.query;
-    const [applicationsList, allEvents] = await Promise.all([
-      mockData.getAllApplications({ search, status, eventId }),
-      mockData.getAllEvents()
-    ]);
-
-    await renderAdminView(
-      res,
-      'admin/applications.ejs',
-      {
-        applications: applicationsList,
-        events: allEvents,
-        filters: {
-          search: search || '',
-          status: status || 'All',
-          eventId: eventId || 'All'
-        },
-        alert: req.query.alert || null
-      },
-      { pageTitle: 'Event Applications', activePage: 'applications' }
-    );
-  } catch (err) {
-    console.error('getApplications error:', err);
-    res.status(500).send('Error loading applications');
-  }
+  const applications = await mockData.getAllApplications();
+  const events = await mockData.getAllEvents();
+  await renderAdminView(
+    res,
+    'admin/applications.ejs',
+    { applications, events, filters: { search: '', status: 'All', eventId: 'All' } },
+    { pageTitle: 'Event Vendor Applications', activePage: 'applications' }
+  );
 }
-
-async function postAcceptApplication(req, res) {
-  try {
-    await mockData.updateApplicationStatus(req.params.id, 'Accepted');
-    res.redirect('/admin/applications?alert=' + encodeURIComponent('Application accepted.'));
-  } catch (err) {
-    res.redirect('/admin/applications?alert=' + encodeURIComponent('Action failed.'));
-  }
-}
-
-async function postRejectApplication(req, res) {
-  try {
-    await mockData.updateApplicationStatus(req.params.id, 'Rejected');
-    res.redirect('/admin/applications?alert=' + encodeURIComponent('Application rejected.'));
-  } catch (err) {
-    res.redirect('/admin/applications?alert=' + encodeURIComponent('Action failed.'));
-  }
-}
-
-// =========================================================================
-// 8. NOTIFICATIONS
-// =========================================================================
 
 async function getNotifications(req, res) {
-  try {
-    const notificationsList = await mockData.getNotifications();
-
-    await renderAdminView(
-      res,
-      'admin/notifications.ejs',
-      {
-        notifications: notificationsList,
-        alert: req.query.alert || null
-      },
-      { pageTitle: 'Admin Notifications', activePage: 'notifications' }
-    );
-  } catch (err) {
-    console.error('getNotifications error:', err);
-    res.status(500).send('Error loading notifications');
-  }
+  const notifications = await mockData.getNotifications();
+  await renderAdminView(
+    res,
+    'admin/notifications.ejs',
+    { notifications, alert: req.query.alert || null },
+    { pageTitle: 'Admin Notifications', activePage: 'notifications' }
+  );
 }
 
 async function postMarkNotificationsRead(req, res) {
-  try {
-    await mockData.markAllNotificationsRead();
-    res.redirect('/admin/notifications?alert=' + encodeURIComponent('All notifications marked as read.'));
-  } catch (err) {
-    res.redirect('/admin/notifications');
-  }
+  await mockData.markAllNotificationsRead();
+  res.redirect('/admin/notifications');
 }
 
-// =========================================================================
-// 9. REPORTS & ANALYTICS
-// =========================================================================
-
 async function getReports(req, res) {
-  try {
-    const reportsData = await mockData.getAdminReports();
-
-    await renderAdminView(
-      res,
-      'admin/reports.ejs',
-      {
-        reports: reportsData,
-        alert: req.query.alert || null
-      },
-      { pageTitle: 'Reports & Analytics', activePage: 'reports' }
-    );
-  } catch (err) {
-    console.error('getReports error:', err);
-    res.status(500).send('Error loading reports');
-  }
+  const reports = await mockData.getAdminReports();
+  await renderAdminView(
+    res,
+    'admin/reports.ejs',
+    { reports },
+    { pageTitle: 'Campus Reports & Analytics', activePage: 'reports' }
+  );
 }
 
 module.exports = {
@@ -412,19 +380,20 @@ module.exports = {
   getUsers,
   postToggleUserStatus,
   deleteUser: postDeleteUser,
-  getOrganizers,
-  postApproveOrganizer,
-  postRejectOrganizer,
+  getHosts,
   getEvents,
-  postApproveEvent,
-  postRejectEvent,
+  postApproveEvent: postHodApproveEvent,
+  postHodApproveEvent,
+  postRejectEvent: postHodRejectEvent,
+  postHodRejectEvent,
+  postHodRequestChanges,
   postDeleteEvent,
+  getConflicts,
+  getVenues,
+  getAuditLogs,
+  getOrganizers,
   getProviders,
-  postApproveProvider,
-  postRejectProvider,
   getApplications,
-  postAcceptApplication,
-  postRejectApplication,
   getNotifications,
   postMarkNotificationsRead,
   getReports

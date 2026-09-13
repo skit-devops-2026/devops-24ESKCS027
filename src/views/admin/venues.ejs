@@ -1,0 +1,44 @@
+<!-- Campus Venue Schedules & Availability Matrix -->
+<div class="page-container">
+
+  <div class="toolbar-card" style="display: flex; justify-content: space-between; align-items: center;">
+    <div>
+      <h2 style="font-size: 16px; font-weight: 700; color: #0f172a;">Campus Venue Booking Matrix</h2>
+      <p style="font-size: 13px; color: var(--color-text-light); margin-top: 2px;">Real-time occupancy calendar and schedule for all college halls, labs, and auditoriums.</p>
+    </div>
+    <a href="/admin/conflicts" class="btn btn--outline btn--sm">⚠️ Check Conflicts</a>
+  </div>
+
+  <div class="dashboard-cards" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+    <% Object.keys(schedules || {}).forEach(function(venueName) { %>
+      <div class="dashboard-section" style="margin-bottom: 0;">
+        <div class="section-header" style="border-bottom: 1px solid var(--color-border); padding-bottom: 10px;">
+          <h3 class="section-title" style="font-size: 15px;">🏛️ <%= venueName %></h3>
+          <span class="badge badge--student"><%= schedules[venueName].length %> Booked Events</span>
+        </div>
+
+        <% if (schedules[venueName].length === 0) { %>
+          <p style="font-size: 12px; color: #059669; margin-top: 10px;">✅ Venue currently available for scheduling.</p>
+        <% } else { %>
+          <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+            <% schedules[venueName].forEach(function(evt) { %>
+              <div style="background-color: var(--color-bg); padding: 10px 12px; border-radius: 6px; font-size: 12px;">
+                <div style="display: flex; justify-content: space-between; font-weight: 700; color: #0f172a;">
+                  <span><%= evt.title %></span>
+                  <span class="status-badge status-badge--<%= evt.status.toLowerCase() %>" style="font-size: 10px;"><%= evt.status %></span>
+                </div>
+                <div style="color: var(--color-text-light); margin-top: 2px;">
+                  📅 <%= evt.date %> • ⏰ <%= evt.startTime || '10:00' %> - <%= evt.endTime || '16:00' %>
+                </div>
+                <div style="font-size: 11px; color: #4338ca; margin-top: 2px;">
+                  Host: <%= evt.hostName || 'Pending' %>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+        <% } %>
+      </div>
+    <% }); %>
+  </div>
+
+</div>
