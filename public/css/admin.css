@@ -629,6 +629,15 @@ body {
   transition: all 0.2s;
 }
 
+.btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
 .btn--sm {
   padding: 5px 10px;
   font-size: 12px;
