@@ -22,11 +22,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  const commit = COMMIT_SHA;
-
   res.json({
     status: 'ok',
-    commit: commit
+    commit: COMMIT_SHA
   });
 });
 
@@ -51,9 +49,12 @@ app.use((err, req, res, next) => {
 });
 
 // --- Start Server ---
-app.listen(PORT, () => {
-  console.log(`EventHive server running on http://localhost:${PORT}`);
-  console.log(`Admin dashboard: http://localhost:${PORT}/admin/dashboard`);
-});
+// Start server only when executed directly (enables safe module importing in tests)
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`EventHive server running on http://localhost:${PORT}`);
+    console.log(`Admin dashboard: http://localhost:${PORT}/admin/dashboard`);
+  });
+}
 
 module.exports = app;
