@@ -53,13 +53,28 @@ function getLoginPage(req, res) {
 }
 
 function postLogin(req, res) {
-  const { email, password } = req.body;
+  const { email, password } = req.body || {};
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@eventhive.com';
   const adminPass = process.env.ADMIN_PASSWORD || 'admin123';
 
-  if (!email || !password) {
+  if (
+    !email ||
+    !password ||
+    typeof email !== 'string' ||
+    typeof password !== 'string' ||
+    !email.trim() ||
+    !password.trim()
+  ) {
     return res.render('admin/login', {
       error: 'Please provide both email and password.',
+      message: null
+    });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email.trim())) {
+    return res.render('admin/login', {
+      error: 'Please provide a valid email address format.',
       message: null
     });
   }
