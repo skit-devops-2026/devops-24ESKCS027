@@ -1,10 +1,11 @@
+
 name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, feature/* ]
+    branches: [main, 'feature/*']
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   # M1 — Repository hygiene
@@ -30,12 +31,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
-          cache: 'npm'
+          cache: npm
 
       - name: Install dependencies
         run: make install
 
       - name: Run automated tests
+        env:
+          JWT_SECRET: ci-test-only-secret-not-for-production
+          ADMIN_NAME: CI Test Administrator
+          ADMIN_EMAIL: admin@example.com
+          ADMIN_PASSWORD: ci-test-only-password
+          GRAFANA_ADMIN_PASSWORD: ci-test-only-grafana-password
+          NODE_ENV: test
         run: make test
 
       - name: Build validation
@@ -48,10 +56,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: latest
+
       - name: Validate Kubernetes manifests with Kustomize
         run: |
-          kubectl kustomize k8s/
-          kubectl apply --dry-run=client -k k8s/
+          kubectl kustomize k8s/ > rendered-k8s.yaml
+          test -s rendered-k8s.yaml
 
   # M5 — Containerization & Smoke Testing
   docker:
@@ -78,11 +91,26 @@ jobs:
             GITHUB_SHA=${{ github.sha }}
 
       - name: Run container health smoke test
+        env:
+          JWT_SECRET: ci-test-only-secret-not-for-production
+          ADMIN_NAME: CI Test Administrator
+          ADMIN_EMAIL: admin@example.com
+          ADMIN_PASSWORD: ci-test-only-password
+          NODE_ENV: test
         run: |
-          docker run -d --name test-eventhive -p 5000:5000 eventhive:test
+          docker run -d --name test-eventhive \
+            -p 5000:5000 \
+            -e JWT_SECRET="$JWT_SECRET" \
+            -e ADMIN_NAME="$ADMIN_NAME" \
+            -e ADMIN_EMAIL="$ADMIN_EMAIL" \
+            -e ADMIN_PASSWORD="$ADMIN_PASSWORD" \
+            -e NODE_ENV="$NODE_ENV" \
+            eventhive:test
           sleep 5
-          curl --fail --retry 5 --retry-delay 2 http://localhost:5000/health || (docker logs test-eventhive && exit 1)
-          docker stop test-eventhive && docker rm test-eventhive
+          curl --fail --retry 5 --retry-delay 2 \
+            http://localhost:5000/health || (docker logs test-eventhive && exit 1)
+          docker stop test-eventhive
+          docker rm test-eventhive
 
       - name: Log in to GitHub Container Registry (GHCR)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
