@@ -4,7 +4,15 @@ const { v4: uuidv4 } = require('uuid');
 // Initial seed password hash for demo accounts: "password123"
 const DEMO_PASSWORD_HASH = bcrypt.hashSync('password123', 10);
 const ORGANIZER_PASSWORD_HASH = bcrypt.hashSync('organizer123', 10);
-const ADMIN_PASSWORD_HASH = bcrypt.hashSync('admin123', 10);
+
+// The admin/HOD user entry exists for data integrity (event approvals,
+// audit logs, etc.) but must NOT have a hardcoded password.  The frontend
+// admin portal uses its own env-configured authentication path.
+// For API login (/api/auth/login), the admin seed user uses the same
+// ADMIN_PASSWORD from the environment.  Without it, admin API login is disabled.
+const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD
+  ? bcrypt.hashSync(process.env.ADMIN_PASSWORD, 10)
+  : '$2a$10$DISABLED.ACCOUNT.NO.LOGIN.PERMITTED.HERE000000000000000';
 
 /**
  * Configurable Single-College Identity

@@ -1,4 +1,4 @@
-.PHONY: install test build run docker-build docker-up
+.PHONY: install test build run docker-build docker-up docker-down k8s-validate
 
 install:
 	npm ci
@@ -17,3 +17,9 @@ docker-build:
 
 docker-up:
 	docker compose up --build
+
+docker-down:
+	docker compose down
+
+k8s-validate:
+	kubectl kustomize k8s/

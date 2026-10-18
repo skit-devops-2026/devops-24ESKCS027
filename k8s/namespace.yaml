@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: eventhive
+  labels:
+    app.kubernetes.io/name: eventhive
+    app.kubernetes.io/part-of: eventhive-platform

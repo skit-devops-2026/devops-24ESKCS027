@@ -3,7 +3,14 @@ npm-debug.log
 .git
 .github
 test
+backend/test
 .env
 .env.*
 !.env.example
 Dockerfile
+docker-compose*.yml
+k8s
+monitoring
+docs
+scripts
+*.md

@@ -34,6 +34,12 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+*.bak
 
 # Testing & Coverage
 coverage/
+
+k8s/secret.yaml
+
+# Local Docker Desktop Metrics Server workaround
+metrics-server-patch.json

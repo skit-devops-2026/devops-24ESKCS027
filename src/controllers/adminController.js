@@ -1,3 +1,4 @@
+const { createAdminToken } = require('../middleware/auth');
 const ejs = require('ejs');
 const path = require('path');
 const mockData = require('../data/mockData');
@@ -31,7 +32,7 @@ async function renderAdminView(res, viewRelativePath, data = {}, layoutOptions =
       alert: layoutOptions.alert || null,
       adminUser: res.locals.adminUser || {
         name: 'Dr. Arthur Pendelton',
-        email: 'admin@eventhive.com',
+        email: process.env.ADMIN_EMAIL || 'Not configured',
         role: 'HOD / Admin'
       },
       content
@@ -53,33 +54,60 @@ function getLoginPage(req, res) {
 }
 
 function postLogin(req, res) {
-  const { email, password } = req.body;
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@eventhive.com';
-  const adminPass = process.env.ADMIN_PASSWORD || 'admin123';
+  const { email, password } = req.body || {};
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPass = process.env.ADMIN_PASSWORD;
 
-  if (!email || !password) {
-    return res.render('admin/login', {
+  if (!adminEmail || !adminPass || !process.env.JWT_SECRET) {
+    return res.status(503).render('admin/login', {
+      error: 'Admin authentication is not configured. Contact the administrator.',
+      message: null
+    });
+  }
+
+  if (
+    typeof email !== 'string' ||
+    typeof password !== 'string' ||
+    !email.trim() ||
+    !password
+  ) {
+    return res.status(400).render('admin/login', {
       error: 'Please provide both email and password.',
       message: null
     });
   }
 
-  if (email.trim().toLowerCase() === adminEmail.toLowerCase() && password === adminPass) {
-    res.cookie('eh_admin_session', 'authenticated_admin_session_token', {
-      httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  const emailMatches =
+    email.trim().toLowerCase() === adminEmail.trim().toLowerCase();
+  const passwordMatches = password === adminPass;
+
+  if (!emailMatches || !passwordMatches) {
+    return res.status(401).render('admin/login', {
+      error: 'Invalid administrator / HOD email or password.',
+      message: null
     });
-    return res.redirect('/admin/dashboard');
   }
 
-  return res.render('admin/login', {
-    error: 'Invalid administrator / HOD email or password.',
-    message: null
+  const token = createAdminToken(adminEmail.trim());
+
+  res.cookie('eh_admin_session', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    path: '/admin',
+    maxAge: 24 * 60 * 60 * 1000
   });
+
+  return res.redirect('/admin/dashboard');
 }
 
 function logout(req, res) {
-  res.clearCookie('eh_admin_session');
+  res.clearCookie('eh_admin_session', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    path: '/admin'
+  });
   res.redirect('/admin/login?message=' + encodeURIComponent('Logged out successfully.'));
 }
 

@@ -75,9 +75,11 @@ async function runTests() {
     console.log('👉 [AUTH SETUP] Authenticating 5 distinct roles...');
 
     // Role 1: HOD / Admin
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    assert.ok(adminPassword, 'ADMIN_PASSWORD must be configured in .env for workflow tests');
     const hodRes = await request('POST', '/api/auth/login', {
       email: 'admin@eventhive.com',
-      password: 'admin123'
+      password: adminPassword
     });
     assert.strictEqual(hodRes.status, 200);
     hodToken = hodRes.body.token;
