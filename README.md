@@ -6,6 +6,12 @@
 |---|---|---|
 | 24ESKCS027 | Ajay Bairwa | AJAYlodhy |
 
+## Live Deployment
+
+**Live URL:** https://devops-24eskcs027.onrender.com
+
+**Health Check:** https://devops-24eskcs027.onrender.com/health
+
 ---
 
 ## 1. Project Overview
