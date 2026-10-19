@@ -368,3 +368,14 @@ EventHive provides two health check endpoints:
 - **Docker Desktop not running**: Launch Docker Desktop from the Start menu before executing Docker commands.
 - **Hygiene check fails**: Run `bash scripts/hygiene.sh` locally to see if untracked files or placeholders remain.
 - **Kubernetes offline check**: Use `kubectl kustomize k8s/` to validate manifests without requiring a cluster connection.
+
+---
+
+## 15. Live Deployment
+
+- **Public Application:** [https://devops-24eskcs027.onrender.com](https://devops-24eskcs027.onrender.com)
+- **Hosting Platform:** Render (Free Tier)
+- **Deployment Source:** GitHub repository, branch `main`
+- **Health Endpoint:** [https://devops-24eskcs027.onrender.com/health](https://devops-24eskcs027.onrender.com/health)
+
+**Note:** The free Render instance may sleep after inactivity, so the first request can take longer to respond.
